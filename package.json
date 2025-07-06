@@ -10,15 +10,25 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@mantine/core": "^8.1.2",
+    "@mantine/dates": "^8.1.2",
+    "@mantine/hooks": "^8.1.2",
+    "@mantine/notifications": "^8.1.2",
+    "@tabler/icons-react": "^3.34.0",
+    "date-fns": "^4.1.0",
+    "dayjs": "^1.11.13",
     "firebase": "^11.10.0",
+    "framer-motion": "^12.23.0",
+    "pdf-lib": "^1.17.1",
     "react": "^19.1.0",
-    "react-dom": "^19.1.0"
+    "react-dom": "^19.1.0",
+    "react-router-dom": "^7.6.3"
   },
   "devDependencies": {
     "@eslint/js": "^9.29.0",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
-    "@vitejs/plugin-react-swc": "^3.10.2",
+    "@vitejs/plugin-react": "^4.6.0",
     "eslint": "^9.29.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",

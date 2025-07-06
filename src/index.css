@@ -1,68 +1,200 @@
-:root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
+/* Mantine CSS imports */
+@import '@mantine/core/styles.css';
+@import '@mantine/notifications/styles.css';
 
 body {
+  font-family: 'Inter', sans-serif;
   margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+  padding: 0;
+  background-color: #f8f9fa;
 }
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+/* Custom Peak Brew static branding - Beer/Liquor Theme */
+.company-static-primary {
+  background-color: #d4af37; /* Gold */
 }
 
-button {
+.company-static-secondary {
+  background-color: #1a1a1a; /* Dark background */
+}
+
+.company-static-accent {
+  background-color: #8b4513; /* Saddle brown */
+}
+
+.beer-theme-bg {
+  background-color: #fafafa; /* Light background */
+}
+
+.liquor-theme-card {
+  background-color: white;
+  border: 1px solid #e0e0e0;
   border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
+/* Remove all gradients and glass effects */
+
+.peak-brew-logo {
+  filter: drop-shadow(0 2px 6px rgba(212, 175, 55, 0.2));
+  transition: all 0.3s ease;
+}
+
+.peak-brew-logo:hover {
+  transform: scale(1.02);
+  filter: drop-shadow(0 4px 12px rgba(212, 175, 55, 0.3));
+}
+
+/* High-quality PDF print optimizations for 100-120KB target */
+@media print {
+  body {
+    font-size: 15px; /* Slightly larger for better readability */
+    line-height: 1.6; /* Better line spacing */
+    font-family: 'Inter', Arial, sans-serif; /* High-quality font for better text rendering */
+    color: #000; /* Pure black for maximum contrast */
+    background: white;
   }
-  a:hover {
-    color: #747bff;
+  
+  .no-print, .skip-pdf {
+    display: none !important;
   }
-  button {
-    background-color: #f9f9f9;
+  
+  /* Ensure high contrast and color preservation for PDF */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
+  
+  /* Better spacing for PDF */
+  .peak-brew-logo {
+    filter: none; /* Remove shadows for better PDF compression */
+    image-rendering: -webkit-optimize-contrast; /* Better image quality */
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+  }
+  
+  /* Optimize table printing with better borders */
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    border: 2px solid #000; /* Strong black borders */
+  }
+  
+  th, td {
+    border: 1px solid #333; /* Dark borders for visibility */
+    padding: 12px; /* More padding for professional look */
+    text-align: left;
+    font-size: 13px; /* Larger font for readability */
+    color: #000; /* Pure black text */
+  }
+  
+  th {
+    background-color: #f0f0f0 !important; /* Light gray headers */
+    font-weight: bold;
+    color: #000 !important;
+  }
+  
+  /* Page breaks */
+  .invoice-page-break {
+    page-break-before: always;
+  }
+  
+  /* Better spacing for elements */
+  .mantine-Stack-root {
+    gap: 16px !important; /* Increased gap for better readability */
+  }
+  
+  .mantine-Group-root {
+    gap: 12px !important;
+  }
+  
+  .mantine-Paper-root {
+    padding: 25px !important; /* More padding for professional look */
+    box-shadow: none !important;
+    border: 2px solid #ddd !important;
+    background: white !important;
+  }
+  
+  .mantine-Table-root {
+    font-size: 13px !important; /* Larger font for better readability */
+    line-height: 1.5 !important;
+  }
+  
+  .mantine-Table-th,
+  .mantine-Table-td {
+    padding: 10px !important; /* Better padding */
+    border: 1px solid #333 !important; /* Strong borders */
+    color: #000 !important;
+  }
+  
+  /* Better text sizing for readability */
+  h1, h2, h3, h4, h5, h6 {
+    margin: 10px 0 !important;
+    line-height: 1.4 !important;
+    color: #000 !important;
+    font-weight: bold !important;
+  }
+  
+  .mantine-Title-root {
+    font-size: 18px !important; /* Larger titles */
+    margin: 8px 0 !important;
+    font-weight: bold !important;
+    color: #000 !important;
+  }
+  
+  .mantine-Text-root {
+    font-size: 13px !important; /* Larger text */
+    line-height: 1.5 !important;
+    color: #000 !important;
+  }
+  
+  /* Ensure proper text contrast */
+  .mantine-Badge-root {
+    border: 2px solid #000 !important;
+    color: #000 !important;
+    background: white !important;
+    font-weight: bold !important;
+  }
+  
+  /* Better visibility for important elements */
+  .invoice-total {
+    font-size: 16px !important;
+    font-weight: bold !important;
+    color: #000 !important;
+  }
+}
+
+/* PDF-specific ultra-compact class */
+.pdf-ultra-compact {
+  font-size: 9px !important;
+  line-height: 1.1 !important;
+  padding: 2px !important;
+  margin: 1px 0 !important;
+}
+
+.pdf-ultra-compact * {
+  font-size: 9px !important;
+  line-height: 1.1 !important;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #e8c848;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #d68910;
 }
