@@ -1,10 +1,19 @@
 rules_version = '2';
 
-// Craft rules based on data in your Firestore database
-// allow write: if firestore.get(
-//    /databases/(default)/documents/users/$(request.auth.uid)).data.isAdmin;
+// Allow authenticated users to read and write their own files
 service firebase.storage {
   match /b/{bucket}/o {
+    // Allow authenticated users to read and write invoice files
+    match /invoices/{userId}/{allPaths=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Allow authenticated users to upload PDF files with their UID in the path
+    match /invoices/{invoiceId}.pdf {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Default deny all other access
     match /{allPaths=**} {
       allow read, write: if false;
     }

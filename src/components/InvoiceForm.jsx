@@ -48,15 +48,12 @@ import Logo from './Logo';
 import { COMPANY_INFO } from '../constants/companyInfo';
 
 const beerProducts = [
-  { id: 'barahsinghe-pilsner-330', name: 'Barahsinghe Pilsner', container: 'Bottle', netContent: '330 ml', alcPercent: 5, unitPerCase: 24, price: 52 },
-  { id: 'barahsinghe-pilsner-650', name: 'Barahsinghe Pilsner', container: 'Bottle', netContent: '650 ml', alcPercent: 5, unitPerCase: 12, price: 52 },
-  { id: 'barahsinghe-hazy-ipa-330', name: 'Barahsinghe Hazy IPA', container: 'Bottle', netContent: '330 ml', alcPercent: 5.5, unitPerCase: 24, price: 55 },
-  { id: 'gorkha-premium-330', name: 'Gorkha Premium', container: 'Bottle', netContent: '330 ml', alcPercent: 5, unitPerCase: 24, price: 55 },
-  { id: 'gorkha-premium-650', name: 'Gorkha Premium', container: 'Bottle', netContent: '650 ml', alcPercent: 5, unitPerCase: 12, price: 55 },
-  { id: 'gorkha-strong-330', name: 'Gorkha Strong', container: 'Bottle', netContent: '330 ml', alcPercent: 7, unitPerCase: 24, price: 58 },
-  { id: 'gorkha-strong-650', name: 'Gorkha Strong', container: 'Bottle', netContent: '650 ml', alcPercent: 7, unitPerCase: 12, price: 58 },
-  { id: 'sherpa-lager-330', name: 'Sherpa Lager', container: 'Bottle', netContent: '330 ml', alcPercent: 4.5, unitPerCase: 24, price: 50 },
-  { id: 'sherpa-lager-650', name: 'Sherpa Lager', container: 'Bottle', netContent: '650 ml', alcPercent: 4.5, unitPerCase: 12, price: 50 },
+  { id: 'yak-barahsinghe-pilsner-330', name: 'Barahsinghe Pilsner', brand: 'Yak', container: 'Bottle', netContent: '330 ml', alcPercent: 5, unitPerCase: 24, price: 52, availability: 'Available' },
+  { id: 'yak-barahsinghe-pilsner-650', name: 'Barahsinghe Pilsner', brand: 'Yak', container: 'Bottle', netContent: '650 ml', alcPercent: 5, unitPerCase: 12, price: 52, availability: 'Available' },
+  { id: 'yak-barahsinghe-hazy-ipa-330', name: 'Barahsinghe Hazy IPA', brand: 'Yak', container: 'Bottle', netContent: '330 ml', alcPercent: 5.5, unitPerCase: 24, price: 55, availability: 'Out of Stock' },
+  { id: 'gorkha-gorkha-premium-330', name: 'Gorkha Premium', brand: 'Gorkha', container: 'Bottle', netContent: '330 ml', alcPercent: 5, unitPerCase: 24, price: 55, availability: 'Out of Stock' },
+  { id: 'gorkha-gorkha-strong-500', name: 'Gorkha Strong', brand: 'Gorkha', container: 'Can', netContent: '500 ml', alcPercent: 6, unitPerCase: 12, price: 55, availability: 'Out of Stock' },
+  { id: 'nepal-ice-nepal-ice-premium-330', name: 'Nepal Ice Premium', brand: 'Nepal Ice', container: 'Bottle', netContent: '330 ml', alcPercent: 5.5, unitPerCase: 24, price: 50, availability: 'Available' },
 ];
 
 const InvoiceForm = ({ onSave, onCancel, invoice = null }) => {
@@ -419,8 +416,8 @@ const InvoiceForm = ({ onSave, onCancel, invoice = null }) => {
                     <Table.Tr>
                       <Table.Th>Product</Table.Th>
                       <Table.Th>Quantity</Table.Th>
-                      <Table.Th>Price (Rs.)</Table.Th>
-                      <Table.Th>Total (Rs.)</Table.Th>
+                      <Table.Th>Price ($)</Table.Th>
+                      <Table.Th>Total ($)</Table.Th>
                       <Table.Th width={50}></Table.Th>
                     </Table.Tr>
                   </Table.Thead>
@@ -458,7 +455,7 @@ const InvoiceForm = ({ onSave, onCancel, invoice = null }) => {
                           />
                         </Table.Td>
                         <Table.Td>
-                          <Text fw={500}>Rs. {item.total.toFixed(2)}</Text>
+                          <Text fw={500}>$ {item.total.toFixed(2)}</Text>
                         </Table.Td>
                         <Table.Td>
                           <ActionIcon
@@ -489,16 +486,16 @@ const InvoiceForm = ({ onSave, onCancel, invoice = null }) => {
                       <Stack gap="xs" align="flex-end">
                         <Group gap="xl">
                           <Text>Subtotal:</Text>
-                          <Text>Rs. {subtotal.toFixed(2)}</Text>
+                          <Text>$ {subtotal.toFixed(2)}</Text>
                         </Group>
                         <Group gap="xl">
                           <Text>Tax (10%):</Text>
-                          <Text>Rs. {tax.toFixed(2)}</Text>
+                          <Text>$ {tax.toFixed(2)}</Text>
                         </Group>
                         <Divider w="100%" />
                         <Group gap="xl">
                           <Text fw={700} size="lg">Total:</Text>
-                          <Text fw={700} size="lg" c="blue">Rs. {total.toFixed(2)}</Text>
+                          <Text fw={700} size="lg" c="blue">$ {total.toFixed(2)}</Text>
                         </Group>
                       </Stack>
                     </Group>

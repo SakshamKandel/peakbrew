@@ -466,7 +466,7 @@ export default function InvoicePreview({ invoice, onClose, onEdit }) {
         cellX += columnWidths[1];
         
         // Price (right aligned)
-        page.drawText(`Rs. ${itemPrice.toFixed(2)}`, {
+        page.drawText(`$ ${itemPrice.toFixed(2)}`, {
           x: cellX + columnWidths[2] - 8,
           y: currentY - 12,
           size: 9,
@@ -476,7 +476,7 @@ export default function InvoicePreview({ invoice, onClose, onEdit }) {
         cellX += columnWidths[2];
         
         // Total (right aligned)
-        page.drawText(`Rs. ${itemTotal.toFixed(2)}`, {
+        page.drawText(`$ ${itemTotal.toFixed(2)}`, {
           x: cellX + columnWidths[3] - 8,
           y: currentY - 12,
           size: 9,
@@ -530,7 +530,7 @@ export default function InvoicePreview({ invoice, onClose, onEdit }) {
         color: textBlack,
       });
       
-      page.drawText(`Rs. ${subtotal.toFixed(2)}`, {
+      page.drawText(`$ ${subtotal.toFixed(2)}`, {
         x: totalsX + 120,
         y: currentY,
         size: 10,
@@ -549,7 +549,7 @@ export default function InvoicePreview({ invoice, onClose, onEdit }) {
         color: textBlack,
       });
       
-      page.drawText(`Rs. ${tax.toFixed(2)}`, {
+      page.drawText(`$ ${tax.toFixed(2)}`, {
         x: totalsX + 120,
         y: currentY,
         size: 10,
@@ -568,7 +568,7 @@ export default function InvoicePreview({ invoice, onClose, onEdit }) {
         color: textBlack,
       });
       
-      page.drawText(`Rs. ${total.toFixed(2)}`, {
+      page.drawText(`$ ${total.toFixed(2)}`, {
         x: totalsX + 120,
         y: currentY,
         size: 12,
@@ -867,10 +867,10 @@ export default function InvoicePreview({ invoice, onClose, onEdit }) {
                       {item.quantity}
                     </Table.Td>
                     <Table.Td style={{ fontSize: '11px', textAlign: 'right', padding: '10px 8px' }}>
-                      Rs. {item.price?.toFixed(2)}
+                      $ {item.price?.toFixed(2)}
                     </Table.Td>
                     <Table.Td style={{ fontSize: '11px', textAlign: 'right', fontWeight: 600, padding: '10px 8px' }}>
-                      Rs. {(item.quantity * item.price)?.toFixed(2)}
+                      $ {(item.quantity * item.price)?.toFixed(2)}
                     </Table.Td>
                   </Table.Tr>
                 ))}
@@ -886,20 +886,20 @@ export default function InvoicePreview({ invoice, onClose, onEdit }) {
                 <Stack gap="xs">
                   <Group justify="space-between">
                     <Text size="sm" fw={500}>Subtotal:</Text>
-                    <Text size="sm">Rs. {invoice.subtotal?.toFixed(2) || '0.00'}</Text>
+                    <Text size="sm">$ {invoice.subtotal?.toFixed(2) || '0.00'}</Text>
                   </Group>
                   
                   {invoice.tax > 0 && (
                     <Group justify="space-between">
                       <Text size="sm" fw={500}>Tax ({invoice.taxRate || 0}%):</Text>
-                      <Text size="sm">Rs. {invoice.tax?.toFixed(2) || '0.00'}</Text>
+                      <Text size="sm">$ {invoice.tax?.toFixed(2) || '0.00'}</Text>
                     </Group>
                   )}
                   
                   {invoice.discount > 0 && (
                     <Group justify="space-between">
                       <Text size="sm" fw={500} c="green">Discount:</Text>
-                      <Text size="sm" c="green">-Rs. {invoice.discount?.toFixed(2) || '0.00'}</Text>
+                      <Text size="sm" c="green">-$ {invoice.discount?.toFixed(2) || '0.00'}</Text>
                     </Group>
                   )}
                   
@@ -908,7 +908,7 @@ export default function InvoicePreview({ invoice, onClose, onEdit }) {
                   <Group justify="space-between">
                     <Text fw={700} size="md">Total:</Text>
                     <Text fw={700} size="md" style={{ color: COMPANY_INFO.colors.primary }}>
-                      Rs. {invoice.total?.toFixed(2) || '0.00'}
+                      $ {invoice.total?.toFixed(2) || '0.00'}
                     </Text>
                   </Group>
                 </Stack>
