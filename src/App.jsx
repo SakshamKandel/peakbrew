@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-import Login from './components/Login';
+import ModernLogin from './components/auth/ModernLogin';
 import Dashboard from './components/Dashboard';
 import { AppShell } from '@mantine/core';
 import './App.css';
@@ -23,7 +23,7 @@ function App() {
           <Routes>
             <Route path="/login" element={
               <PublicRoute>
-                <Login />
+                <ModernLogin />
               </PublicRoute>
             } />
             <Route path="/dashboard" element={

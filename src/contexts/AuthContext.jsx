@@ -4,8 +4,8 @@ import {
   signOut, 
   onAuthStateChanged 
 } from 'firebase/auth';
-import { LoadingOverlay } from '@mantine/core';
 import { auth } from '../firebase';
+import LoadingScreen from '../components/LoadingScreen';
 
 const AuthContext = createContext();
 
@@ -16,6 +16,7 @@ export function useAuth() {
 export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showLoadingScreen, setShowLoadingScreen] = useState(true);
 
   function login(email, password) {
     return signInWithEmailAndPassword(auth, email, password);
@@ -34,6 +35,10 @@ export function AuthProvider({ children }) {
     return unsubscribe;
   }, []);
 
+  const handleLoadingComplete = () => {
+    setShowLoadingScreen(false);
+  };
+
   const value = {
     currentUser,
     login,
@@ -42,12 +47,10 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider value={value}>
-      {loading ? (
-        <LoadingOverlay 
-          visible={true} 
-          overlayProps={{ radius: "sm", blur: 2 }}
-          loaderProps={{ color: 'blue', type: 'bars' }}
-        />
+      {loading || showLoadingScreen ? (
+        <LoadingScreen onComplete={handleLoadingComplete}>
+          {children}
+        </LoadingScreen>
       ) : (
         children
       )}

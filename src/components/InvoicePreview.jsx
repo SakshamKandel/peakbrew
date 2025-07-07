@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+import { useRef } from 'react';
 import { 
   Paper,
   Button,
@@ -32,7 +32,7 @@ import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage
 import { doc, updateDoc } from 'firebase/firestore';
 import Logo from './Logo';
 import { COMPANY_INFO, getFullAddress, getContactLine } from '../constants/companyInfo';
-import peakBrewLogo from '../assets/peak brew.svg';
+import logoSvgSrc from '../assets/peak brew.svg';
 
 export default function InvoicePreview({ invoice, onClose, onEdit }) {
   const invoiceRef = useRef();
@@ -65,19 +65,25 @@ export default function InvoicePreview({ invoice, onClose, onEdit }) {
     return format(date, formatString);
   };
 
-  const generateAndUploadPDF = async () => {
+  const generateAndUploadPDF = async (forceRegenerate = false) => {
     if (!invoice || !invoice.id) {
       return;
     }
 
     const notificationId = notifications.show({
       loading: true,
-      title: 'Generating PDF',
-      message: 'Creating invoice PDF that matches web design...',
+      title: 'Generating Professional PDF',
+      message: 'Creating updated invoice PDF with latest information...',
       autoClose: false,
     });
 
     try {
+      // Force regeneration if invoice was recently edited or explicitly requested
+      const shouldForceRegenerate = forceRegenerate || 
+        (invoice.updatedAt && new Date() - new Date(invoice.updatedAt.toDate ? invoice.updatedAt.toDate() : invoice.updatedAt) < 60000); // Within last minute
+      
+      // Always regenerate PDF to ensure latest data
+      console.log('Generating fresh PDF with current invoice data');
       // Clean text function for PDF compatibility
       const safeText = (text) => {
         if (!text) return '';
@@ -131,18 +137,18 @@ export default function InvoicePreview({ invoice, onClose, onEdit }) {
           };
           
           img.onerror = () => reject(new Error('Failed to load logo'));
-          img.src = peakBrewLogo;
+          img.src = logoSvgSrc;
         });
       };
 
-      // Create PDF document - exact match to web design
+      // Create modern PDF document
       const pdfDoc = await PDFDocument.create();
       
       // Set PDF metadata
       pdfDoc.setTitle(`Peak Brew Trading - Invoice ${invoice.invoiceNumber}`);
       pdfDoc.setAuthor('Peak Brew Trading');
       pdfDoc.setSubject(`Invoice #${invoice.invoiceNumber}`);
-      pdfDoc.setCreator('Peak Brew Invoice System');
+      pdfDoc.setCreator('Peak Brew Invoice Management System');
       pdfDoc.setProducer('Peak Brew Trading');
       pdfDoc.setCreationDate(new Date());
       
@@ -153,14 +159,17 @@ export default function InvoicePreview({ invoice, onClose, onEdit }) {
       const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
       const helveticaBoldFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
       
-      // Colors matching web design
-      const primaryBlue = rgb(0.18, 0.42, 0.65); // #2e6aa5 - main blue
-      const goldYellow = rgb(1, 0.75, 0); // #ffc000 - PENDING badge color
-      const textGray = rgb(0.4, 0.4, 0.4); // #666 - subtitle text
-      const textBlack = rgb(0, 0, 0); // #000 - main text
-      const lightGray = rgb(0.95, 0.95, 0.95); // #f3f3f3 - light background
-      const borderGray = rgb(0.87, 0.87, 0.87); // #dedede - borders
+      // Modern color palette
+      const primaryBlue = rgb(0.2, 0.4, 0.7); // #3366B3
+      const accentGold = rgb(0.83, 0.69, 0.22); // #D4AF37
+      const darkText = rgb(0.1, 0.1, 0.1); // #1A1A1A
+      const lightText = rgb(0.4, 0.4, 0.4); // #666666
+      const borderGray = rgb(0.9, 0.9, 0.9); // #E6E6E6
+      const lightBg = rgb(0.98, 0.98, 0.98); // #FAFAFA
       const white = rgb(1, 1, 1);
+      const statusGreen = rgb(0.15, 0.7, 0.15); // #26B226
+      const statusOrange = rgb(0.95, 0.6, 0.1); // #F39C1F
+      const statusRed = rgb(0.8, 0.2, 0.2); // #CC3333
       
       // Embed logo
       let logoImage = null;
@@ -174,458 +183,587 @@ export default function InvoicePreview({ invoice, onClose, onEdit }) {
       
       let currentY = height - 60;
       
-      // === HEADER SECTION - Exact match to web design ===
+      // === CLEAN HEADER SECTION ===
       
-      // Logo (left side)
+      // Company logo and name
       if (logoImage) {
         page.drawImage(logoImage, {
           x: 50,
-          y: height - 110,
+          y: height - 100,
           width: 60,
           height: 60,
         });
       }
       
-      // Company info (next to logo)
-      page.drawText(safeText('Peak Brew Trading'), {
+      // Company name
+      page.drawText('PEAK BREW TRADING', {
         x: 125,
         y: height - 65,
-        size: 20,
+        size: 24,
         font: helveticaBoldFont,
-        color: goldYellow,
+        color: primaryBlue,
       });
       
-      page.drawText(safeText('Premium Beer Distribution'), {
+      // Company subtitle
+      page.drawText('Premium Beer Distribution', {
         x: 125,
         y: height - 85,
         size: 11,
         font: helveticaFont,
-        color: textGray,
+        color: lightText,
       });
       
-      // Company contact details
-      page.drawText(safeText(getFullAddress()), {
-        x: 50,
-        y: height - 130,
-        size: 8,
+      // Company contact info with proper spacing across multiple lines
+      page.drawText('7840 Tyler Blvd, Unit 6201', {
+        x: 125,
+        y: height - 95,
+        size: 9,
         font: helveticaFont,
-        color: textGray,
+        color: lightText,
       });
       
-      page.drawText(safeText(COMPANY_INFO.contact.email), {
-        x: 50,
-        y: height - 142,
-        size: 8,
+      page.drawText('Mentor, OH 44060, USA', {
+        x: 125,
+        y: height - 105,
+        size: 9,
         font: helveticaFont,
-        color: textGray,
+        color: lightText,
       });
       
-      page.drawText(safeText(COMPANY_INFO.contact.phone), {
-        x: 50,
-        y: height - 154,
-        size: 8,
+      page.drawText('Phone: +1 412-894-6129', {
+        x: 125,
+        y: height - 115,
+        size: 9,
         font: helveticaFont,
-        color: textGray,
+        color: lightText,
       });
       
-      // INVOICE title and details (right side)
+      page.drawText('Email: peakbrewtrading@gmail.com', {
+        x: 125,
+        y: height - 125,
+        size: 9,
+        font: helveticaFont,
+        color: lightText,
+      });
+      
+      // Invoice title and number - right side
       page.drawText('INVOICE', {
         x: width - 150,
         y: height - 65,
-        size: 18,
+        size: 28,
         font: helveticaBoldFont,
-        color: textBlack,
+        color: primaryBlue,
       });
       
       page.drawText(`#${safeText(invoice.invoiceNumber)}`, {
         x: width - 150,
-        y: height - 85,
+        y: height - 90,
         size: 12,
         font: helveticaBoldFont,
-        color: textBlack,
+        color: darkText,
       });
       
       // Status badge
       const statusText = safeText(invoice.status.toUpperCase());
-      const statusColor = invoice.status?.toLowerCase() === 'paid' ? rgb(0.13, 0.8, 0.47) : 
-                         invoice.status?.toLowerCase() === 'pending' ? goldYellow : 
-                         rgb(0.8, 0.13, 0.13);
+      const statusColor = invoice.status?.toLowerCase() === 'paid' ? statusGreen : 
+                         invoice.status?.toLowerCase() === 'pending' ? statusOrange : 
+                         statusRed;
       
-      // Status badge background
       page.drawRectangle({
         x: width - 150,
-        y: height - 110,
-        width: 60,
-        height: 16,
+        y: height - 115,
+        width: 80,
+        height: 20,
         color: statusColor,
-        borderRadius: 8,
+        borderRadius: 10,
       });
       
       page.drawText(statusText, {
-        x: width - 135,
-        y: height - 105,
-        size: 8,
+        x: width - 140,
+        y: height - 108,
+        size: 10,
         font: helveticaBoldFont,
         color: white,
       });
       
-      // Date
-      page.drawText(safeText(formatInvoiceDate(invoice.date, 'MMM dd, yyyy')), {
-        x: width - 150,
-        y: height - 125,
-        size: 9,
-        font: helveticaFont,
-        color: textGray,
+      currentY = height - 150;
+      
+      // === CLEAN INVOICE DETAILS SECTION ===
+      
+      // Draw a light separator line
+      page.drawLine({
+        start: { x: 50, y: currentY },
+        end: { x: width - 50, y: currentY },
+        thickness: 1,
+        color: borderGray,
       });
       
-      currentY = height - 180;
+      currentY -= 30;
       
-      // === INVOICE DETAILS SECTION - Matching web design ===
+      // Invoice and customer information in clean boxes
+      const boxWidth = (width - 130) / 2; // Two equal columns with spacing
       
-      // Invoice Date (left side with icon simulation)
-      page.drawText('Invoice Date:', {
+      // Left box - Invoice Information
+      page.drawRectangle({
         x: 50,
-        y: currentY,
-        size: 10,
+        y: currentY - 80,
+        width: boxWidth,
+        height: 80,
+        color: lightBg,
+        borderColor: borderGray,
+        borderWidth: 1,
+        borderRadius: 4,
+      });
+      
+      page.drawText('Invoice Information', {
+        x: 60,
+        y: currentY - 20,
+        size: 12,
         font: helveticaBoldFont,
         color: primaryBlue,
       });
       
-      page.drawText(safeText(formatInvoiceDate(invoice.date)), {
-        x: 50,
-        y: currentY - 18,
+      page.drawText(`Date: ${safeText(formatInvoiceDate(invoice.date))}`, {
+        x: 60,
+        y: currentY - 40,
         size: 10,
         font: helveticaFont,
-        color: textBlack,
+        color: darkText,
       });
       
-      // Bill To (right side)
-      page.drawText('Bill To:', {
-        x: 300,
-        y: currentY,
+      page.drawText(`Invoice ID: ${safeText(invoice.invoiceNumber)}`, {
+        x: 60,
+        y: currentY - 55,
         size: 10,
+        font: helveticaFont,
+        color: darkText,
+      });
+      
+      page.drawText(`Permit: ${safeText(invoice.permitNumber || '06756556-1')}`, {
+        x: 60,
+        y: currentY - 70,
+        size: 10,
+        font: helveticaFont,
+        color: darkText,
+      });
+      
+      // Right box - Customer Information
+      const rightBoxX = 80 + boxWidth;
+      page.drawRectangle({
+        x: rightBoxX,
+        y: currentY - 80,
+        width: boxWidth,
+        height: 80,
+        color: lightBg,
+        borderColor: borderGray,
+        borderWidth: 1,
+        borderRadius: 4,
+      });
+      
+      page.drawText('Bill To', {
+        x: rightBoxX + 10,
+        y: currentY - 20,
+        size: 12,
         font: helveticaBoldFont,
         color: primaryBlue,
       });
       
-      page.drawText(safeText(invoice.customerName), {
-        x: 300,
-        y: currentY - 18,
+      const customerName = safeText(invoice.customerName);
+      page.drawText(customerName.length > 30 ? customerName.substring(0, 30) + '...' : customerName, {
+        x: rightBoxX + 10,
+        y: currentY - 40,
         size: 11,
         font: helveticaBoldFont,
-        color: textBlack,
+        color: darkText,
       });
       
-      // Customer contact details
-      let customerY = currentY - 35;
-      
       if (invoice.customerEmail) {
-        page.drawText(safeText(invoice.customerEmail), {
-          x: 300,
-          y: customerY,
+        const email = safeText(invoice.customerEmail);
+        page.drawText(email.length > 35 ? email.substring(0, 35) + '...' : email, {
+          x: rightBoxX + 10,
+          y: currentY - 55,
           size: 9,
           font: helveticaFont,
-          color: textGray,
+          color: lightText,
         });
-        customerY -= 15;
       }
       
       if (invoice.customerPhone) {
         page.drawText(safeText(invoice.customerPhone), {
-          x: 300,
-          y: customerY,
+          x: rightBoxX + 10,
+          y: currentY - 70,
           size: 9,
           font: helveticaFont,
-          color: textGray,
-        });
-        customerY -= 15;
-      }
-      
-      if (invoice.customerAddress) {
-        page.drawText(safeText(invoice.customerAddress), {
-          x: 300,
-          y: customerY,
-          size: 9,
-          font: helveticaFont,
-          color: textGray,
+          color: lightText,
         });
       }
       
-      currentY -= 100;
+      currentY -= 110;
       
-      // === INVOICE ITEMS SECTION - Exact match to web design ===
+      // === MODERN ITEMS TABLE ===
       
-      page.drawText('Invoice Items', {
+      // Table header
+      page.drawText('Items', {
         x: 50,
         y: currentY,
-        size: 14,
+        size: 16,
         font: helveticaBoldFont,
         color: primaryBlue,
       });
       
-      currentY -= 25;
+      currentY -= 30;
       
-      // Table setup matching web design exactly
-      const tableStartY = currentY;
-      const tableHeaders = ['Description', 'Qty', 'Price', 'Total'];
-      const columnWidths = [300, 60, 80, 80]; // Adjusted to match web layout
-      const tableWidth = columnWidths.reduce((sum, width) => sum + width, 0);
+      // Table setup with clean design
+      const tableY = currentY;
+      const tableHeight = 25;
+      const rowHeight = 30;
+      
+      // Define columns with precise positioning
+      const tableColumns = [
+        { label: 'Description', x: 50, width: 250, align: 'left' },
+        { label: 'Qty', x: 310, width: 50, align: 'center' },
+        { label: 'Unit Price', x: 370, width: 80, align: 'right' },
+        { label: 'Total', x: 460, width: 85, align: 'right' }
+      ];
+      
+      const tableWidth = 495;
       
       // Table header background
       page.drawRectangle({
         x: 50,
-        y: tableStartY - 25,
+        y: tableY - tableHeight,
         width: tableWidth,
-        height: 25,
-        color: lightGray,
-        borderColor: borderGray,
-        borderWidth: 1,
+        height: tableHeight,
+        color: primaryBlue,
       });
       
-      // Table headers
-      let headerX = 50;
-      tableHeaders.forEach((header, index) => {
-        page.drawText(header, {
-          x: headerX + 8,
-          y: tableStartY - 15,
-          size: 10,
+      // Header text
+      tableColumns.forEach(col => {
+        let textX = col.x + 10;
+        if (col.align === 'center') textX = col.x + col.width / 2 - (col.label.length * 3);
+        if (col.align === 'right') textX = col.x + col.width - 10 - (col.label.length * 6);
+        
+        page.drawText(col.label, {
+          x: textX,
+          y: tableY - 16,
+          size: 11,
           font: helveticaBoldFont,
-          color: textBlack,
+          color: white,
         });
-        headerX += columnWidths[index];
       });
       
-      currentY = tableStartY - 30;
+      currentY = tableY - tableHeight;
       
-      // Table items
+      // Table rows
       let subtotalCalc = 0;
+      
       invoice.items.forEach((item, index) => {
         const itemPrice = item.price || 0;
         const quantity = item.quantity || 0;
         const itemTotal = quantity * itemPrice;
         subtotalCalc += itemTotal;
         
-        // Alternating row background (striped table like web)
-        if (index % 2 === 0) {
-          page.drawRectangle({
-            x: 50,
-            y: currentY - 20,
-            width: tableWidth,
-            height: 20,
-            color: rgb(0.99, 0.99, 0.99),
-            borderColor: borderGray,
-            borderWidth: 0.5,
-          });
-        } else {
-          page.drawRectangle({
-            x: 50,
-            y: currentY - 20,
-            width: tableWidth,
-            height: 20,
-            color: white,
-            borderColor: borderGray,
-            borderWidth: 0.5,
-          });
-        }
+        // Row background (alternating colors)
+        const rowBg = index % 2 === 0 ? white : lightBg;
         
-        let cellX = 50;
+        page.drawRectangle({
+          x: 50,
+          y: currentY - rowHeight,
+          width: tableWidth,
+          height: rowHeight,
+          color: rowBg,
+          borderColor: borderGray,
+          borderWidth: 0.5,
+        });
         
-        // Description column
+        // Product description
         const productName = safeText(item.product || item.name || '');
         const containerInfo = item.container && item.netContent ? 
           `${safeText(item.container)} (${safeText(item.netContent)})` : '';
         
-        page.drawText(productName, {
-          x: cellX + 8,
-          y: currentY - 10,
-          size: 9,
+        const maxProductChars = 35;
+        const displayName = productName.length > maxProductChars ? 
+          productName.substring(0, maxProductChars) + '...' : productName;
+        
+        page.drawText(displayName, {
+          x: 60,
+          y: currentY - 12,
+          size: 10,
           font: helveticaBoldFont,
-          color: textBlack,
+          color: darkText,
         });
         
         if (containerInfo) {
-          page.drawText(containerInfo, {
-            x: cellX + 8,
-            y: currentY - 18,
+          const maxContainerChars = 40;
+          const displayContainer = containerInfo.length > maxContainerChars ? 
+            containerInfo.substring(0, maxContainerChars) + '...' : containerInfo;
+          
+          page.drawText(displayContainer, {
+            x: 60,
+            y: currentY - 24,
             size: 8,
             font: helveticaFont,
-            color: textGray,
+            color: lightText,
           });
         }
         
-        cellX += columnWidths[0];
-        
-        // Quantity (center aligned)
-        page.drawText(quantity.toString(), {
-          x: cellX + (columnWidths[1] / 2) - 8,
-          y: currentY - 12,
-          size: 9,
+        // Quantity (centered)
+        const qtyText = quantity.toString();
+        page.drawText(qtyText, {
+          x: 335 - (qtyText.length * 3),
+          y: currentY - 18,
+          size: 10,
           font: helveticaFont,
-          color: textBlack,
+          color: darkText,
         });
-        cellX += columnWidths[1];
         
-        // Price (right aligned)
-        page.drawText(`$ ${itemPrice.toFixed(2)}`, {
-          x: cellX + columnWidths[2] - 8,
-          y: currentY - 12,
-          size: 9,
+        // Unit Price (right aligned)
+        const priceText = `$${itemPrice.toFixed(2)}`;
+        page.drawText(priceText, {
+          x: 440 - (priceText.length * 6),
+          y: currentY - 18,
+          size: 10,
           font: helveticaFont,
-          color: textBlack,
+          color: darkText,
         });
-        cellX += columnWidths[2];
         
-        // Total (right aligned)
-        page.drawText(`$ ${itemTotal.toFixed(2)}`, {
-          x: cellX + columnWidths[3] - 8,
-          y: currentY - 12,
-          size: 9,
+        // Total (right aligned, bold)
+        const totalText = `$${itemTotal.toFixed(2)}`;
+        page.drawText(totalText, {
+          x: 535 - (totalText.length * 6),
+          y: currentY - 18,
+          size: 10,
           font: helveticaBoldFont,
-          color: textBlack,
+          color: primaryBlue,
         });
         
-        currentY -= 25; // Spacing between rows
+        currentY -= rowHeight;
       });
       
-      // Table bottom border
+      // Table bottom line
       page.drawLine({
         start: { x: 50, y: currentY },
-        end: { x: 50 + tableWidth, y: currentY },
-        color: borderGray,
-        thickness: 1,
+        end: { x: 545, y: currentY },
+        thickness: 2,
+        color: primaryBlue,
       });
       
-      // Vertical table lines
-      let lineX = 50;
-      columnWidths.forEach((width, index) => {
-        if (index < columnWidths.length - 1) {
-          lineX += width;
-          page.drawLine({
-            start: { x: lineX, y: tableStartY },
-            end: { x: lineX, y: currentY },
-            color: borderGray,
-            thickness: 0.5,
-          });
-        }
+      currentY -= 40;
+      
+      // === CLEAN TOTALS SECTION ===
+      
+      const subtotal = invoice.subtotal || subtotalCalc;
+      const total = invoice.total || subtotal;
+      
+      // Total box
+      const totalBoxWidth = 180;
+      const totalBoxHeight = 50;
+      const totalBoxX = width - totalBoxWidth - 50;
+      
+      page.drawRectangle({
+        x: totalBoxX,
+        y: currentY - totalBoxHeight,
+        width: totalBoxWidth,
+        height: totalBoxHeight,
+        color: primaryBlue,
+        borderRadius: 4,
       });
+      
+      page.drawText('TOTAL AMOUNT', {
+        x: totalBoxX + 15,
+        y: currentY - 20,
+        size: 12,
+        font: helveticaBoldFont,
+        color: white,
+      });
+      
+      const totalAmountText = `$${total.toFixed(2)}`;
+      page.drawText(totalAmountText, {
+        x: totalBoxX + 15,
+        y: currentY - 38,
+        size: 18,
+        font: helveticaBoldFont,
+        color: accentGold,
+      });
+      
+      currentY -= 80;
+      
+      // === FOOTER SECTION ===
+      
+      // Professional message based on payment status
+      const isInvoicePaid = invoice.status?.toLowerCase() === 'paid';
+      
+      if (isInvoicePaid) {
+        page.drawText('Payment Confirmation', {
+          x: 50,
+          y: currentY,
+          size: 12,
+          font: helveticaBoldFont,
+          color: statusGreen,
+        });
+        
+        currentY -= 20;
+        
+        page.drawText('We acknowledge receipt of your payment for this invoice. Your account has been credited', {
+          x: 50,
+          y: currentY,
+          size: 9,
+          font: helveticaFont,
+          color: darkText,
+        });
+        
+        currentY -= 12;
+        
+        page.drawText('and this transaction is now complete. We appreciate your business with Peak Brew Trading.', {
+          x: 50,
+          y: currentY,
+          size: 9,
+          font: helveticaFont,
+          color: darkText,
+        });
+        
+        currentY -= 18;
+        
+        page.drawText('Should you require any assistance or have questions regarding this invoice,', {
+          x: 50,
+          y: currentY,
+          size: 9,
+          font: helveticaFont,
+          color: lightText,
+        });
+        
+        currentY -= 12;
+        
+        page.drawText('please do not hesitate to contact our customer service team.', {
+          x: 50,
+          y: currentY,
+          size: 9,
+          font: helveticaFont,
+          color: lightText,
+        });
+      } else {
+        page.drawText('Payment Terms & Instructions', {
+          x: 50,
+          y: currentY,
+          size: 12,
+          font: helveticaBoldFont,
+          color: primaryBlue,
+        });
+        
+        currentY -= 20;
+        
+        page.drawText('Payment for this invoice is due within 30 days of the invoice date. Please ensure', {
+          x: 50,
+          y: currentY,
+          size: 9,
+          font: helveticaFont,
+          color: darkText,
+        });
+        
+        currentY -= 12;
+        
+        page.drawText('timely payment to maintain your account in good standing and avoid service interruptions.', {
+          x: 50,
+          y: currentY,
+          size: 9,
+          font: helveticaFont,
+          color: darkText,
+        });
+        
+        currentY -= 18;
+        
+        page.drawText('For payment inquiries, account questions, or to discuss payment arrangements,', {
+          x: 50,
+          y: currentY,
+          size: 9,
+          font: helveticaFont,
+          color: lightText,
+        });
+        
+        currentY -= 12;
+        
+        page.drawText('please contact our accounts receivable department immediately.', {
+          x: 50,
+          y: currentY,
+          size: 9,
+          font: helveticaFont,
+          color: lightText,
+        });
+      }
       
       currentY -= 30;
       
-      // === TOTALS SECTION - Exact match to web design ===
-      
-      const subtotal = invoice.subtotal || subtotalCalc;
-      const taxRate = invoice.taxRate || 10;
-      const tax = invoice.tax || (subtotal * taxRate / 100);
-      const total = invoice.total || (subtotal + tax);
-      
-      // Position totals on the right side like web design
-      const totalsX = 350;
-      
-      // Subtotal
-      page.drawText('Subtotal:', {
-        x: totalsX,
-        y: currentY,
-        size: 10,
-        font: helveticaFont,
-        color: textBlack,
+      // Footer line
+      page.drawLine({
+        start: { x: 50, y: currentY },
+        end: { x: width - 50, y: currentY },
+        thickness: 1,
+        color: borderGray,
       });
       
-      page.drawText(`$ ${subtotal.toFixed(2)}`, {
-        x: totalsX + 120,
-        y: currentY,
-        size: 10,
-        font: helveticaFont,
-        color: textBlack,
-      });
+      currentY -= 15;
       
-      currentY -= 18;
-      
-      // Tax
-      page.drawText(`Tax (${taxRate}%):`, {
-        x: totalsX,
-        y: currentY,
-        size: 10,
-        font: helveticaFont,
-        color: textBlack,
-      });
-      
-      page.drawText(`$ ${tax.toFixed(2)}`, {
-        x: totalsX + 120,
-        y: currentY,
-        size: 10,
-        font: helveticaFont,
-        color: textBlack,
-      });
-      
-      currentY -= 25;
-      
-      // Total (highlighted like web design)
-      page.drawText('Total:', {
-        x: totalsX,
-        y: currentY,
-        size: 12,
-        font: helveticaBoldFont,
-        color: textBlack,
-      });
-      
-      page.drawText(`$ ${total.toFixed(2)}`, {
-        x: totalsX + 120,
-        y: currentY,
-        size: 12,
-        font: helveticaBoldFont,
-        color: goldYellow, // Golden color like web design
-      });
-      
-      currentY -= 50;
-      
-      // === FOOTER - Exact match to web design ===
-      
-      page.drawText('Thank you for your business! Please remit payment by the due date.', {
+      // Company footer info with generation timestamp
+      page.drawText(`${COMPANY_INFO.name} | Professional Invoice System`, {
         x: 50,
-        y: 150,
-        size: 9,
+        y: currentY,
+        size: 8,
         font: helveticaFont,
-        color: textGray,
+        color: lightText,
       });
       
-      page.drawText(`${safeText(COMPANY_INFO.name)} | ${safeText(getContactLine())}`, {
-        x: 50,
-        y: 135,
-        size: 9,
-        font: helveticaFont,
-        color: textGray,
+      const generationTime = new Date().toLocaleString('en-US', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
       });
       
-      // Generate and save PDF
+      page.drawText(`Generated: ${generationTime}`, {
+        x: width - 150,
+        y: currentY,
+        size: 8,
+        font: helveticaFont,
+        color: lightText,
+      });
+      
+      // Generate and save PDF with current timestamp to ensure freshness
       const pdfBytes = await pdfDoc.save();
       const pdfBlob = new Blob([pdfBytes], { type: 'application/pdf' });
       
       const fileSizeKB = (pdfBlob.size / 1024).toFixed(1);
-      console.log(`PDF generated: ${fileSizeKB} KB`);
+      console.log(`Fresh PDF generated: ${fileSizeKB} KB with latest invoice data`);
       
-      // Upload if needed
-      if (!invoice.pdfURL) {
-        const pdfStorageRef = storageRef(storage, `invoices/${invoice.id}.pdf`);
-        await uploadBytes(pdfStorageRef, pdfBlob);
-        const pdfURL = await getDownloadURL(pdfStorageRef);
-        
-        const invoiceDocRef = doc(db, 'invoices', invoice.id);
-        await updateDoc(invoiceDocRef, { pdfURL });
-      }
+      // Always upload new PDF to ensure latest data is stored
+      const timestamp = new Date().getTime();
+      const pdfStorageRef = storageRef(storage, `invoices/${invoice.id}_${timestamp}.pdf`);
+      await uploadBytes(pdfStorageRef, pdfBlob);
+      const pdfURL = await getDownloadURL(pdfStorageRef);
+      
+      // Update invoice with new PDF URL
+      const invoiceDocRef = doc(db, 'invoices', invoice.id);
+      await updateDoc(invoiceDocRef, { 
+        pdfURL,
+        pdfGeneratedAt: new Date(),
+        lastModified: new Date()
+      });
 
       notifications.update({
         id: notificationId,
         color: 'green',
         title: 'PDF Generated Successfully',
-        message: `Invoice PDF created matching web design! (${fileSizeKB} KB)`,
+        message: `Updated invoice PDF created! (${fileSizeKB} KB)`,
         loading: false,
         autoClose: 3000,
       });
 
-      // Download the PDF
+      // Download the fresh PDF with unique filename
+      const downloadFilename = `Invoice-${invoice.invoiceNumber}-${new Date().toISOString().split('T')[0]}.pdf`;
       const link = document.createElement('a');
       link.href = URL.createObjectURL(pdfBlob);
-      link.download = `Invoice-${invoice.invoiceNumber}.pdf`;
+      link.download = downloadFilename;
       link.click();
 
       URL.revokeObjectURL(link.href);
@@ -688,146 +826,173 @@ export default function InvoicePreview({ invoice, onClose, onEdit }) {
   };
 
   return (
-    <Container size="xl" py="xl">
-      {/* Action Buttons - Hidden in PDF */}
-      <Group justify="space-between" mb="xl" className="skip-pdf">
-        <Button
-          leftSection={<IconArrowLeft size={16} />}
-          variant="light"
-          onClick={onClose}
-          className="skip-pdf"
+    <div style={{
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg, #4a3728 0%, #2d1f1a 50%, #1a1310 100%)',
+      padding: '20px'
+    }}>
+      <Container size="xl" py="xl">
+        {/* Action Buttons - Hidden in PDF */}
+        <Paper p="md" mb="xl" className="skip-pdf" style={{
+          background: 'linear-gradient(135deg, rgba(212, 175, 55, 0.08) 0%, rgba(74, 55, 40, 0.03) 100%)',
+          backdropFilter: 'blur(20px)',
+          border: '1px solid rgba(212, 175, 55, 0.2)',
+          borderRadius: '12px'
+        }}>
+          <Group justify="space-between" className="skip-pdf">
+            <Button
+              leftSection={<IconArrowLeft size={16} />}
+              variant="light"
+              onClick={onClose}
+              className="skip-pdf"
+              style={{
+                backgroundColor: 'rgba(156, 163, 175, 0.1)',
+                color: '#9ca3af',
+                border: '1px solid rgba(156, 163, 175, 0.2)'
+              }}
+            >
+              Back to Dashboard
+            </Button>
+            
+            <Group className="skip-pdf">
+              <Button
+                leftSection={<IconEdit size={16} />}
+                variant="light"
+                onClick={onEdit}
+                className="skip-pdf"
+                style={{
+                  backgroundColor: 'rgba(251, 146, 60, 0.1)',
+                  color: '#fb923c',
+                  border: '1px solid rgba(251, 146, 60, 0.2)'
+                }}
+              >
+                Edit Invoice
+              </Button>
+              
+              {invoice.pdfURL ? (
+                <Button
+                  leftSection={<IconDownload size={16} />}
+                  onClick={downloadExistingPDF}
+                  style={{
+                    background: 'linear-gradient(135deg, #10b981 0%, #14f195 100%)',
+                    color: '#ffffff',
+                    border: 'none',
+                    fontWeight: 600
+                  }}
+                >
+                  Download PDF
+                </Button>              ) : (
+                <Button
+                  leftSection={<IconDownload size={16} />}
+                  onClick={() => generateAndUploadPDF(true)} // Force regeneration
+                  style={{
+                    background: 'linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%)',
+                    color: '#ffffff',
+                    border: 'none',
+                    fontWeight: 600
+                  }}
+                >
+                  Generate PDF
+                </Button>
+              )}
+            </Group>
+          </Group>
+        </Paper>        {/* Invoice Content - Redesigned with Dark Theme */}
+        <Paper
+          ref={invoiceRef}
+          shadow="xl"
+          p={40}
+          radius="xl"
+          style={{ 
+            background: 'linear-gradient(135deg, rgba(212, 175, 55, 0.08) 0%, rgba(74, 55, 40, 0.03) 100%)',
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(212, 175, 55, 0.2)',
+            maxWidth: '210mm',
+            minHeight: '297mm',
+            margin: '0 auto',
+            fontSize: '14px',
+            lineHeight: '1.5',
+            fontFamily: 'Inter, Arial, sans-serif',
+            color: '#ffffff'
+          }}
         >
-          Back to Dashboard
-        </Button>
-        
-        <Group className="skip-pdf">
-          <Button
-            leftSection={<IconEdit size={16} />}
-            variant="light"
-            color="orange"
-            onClick={onEdit}
-            className="skip-pdf"
-          >
-            Edit Invoice
-          </Button>
-          
-          {invoice.pdfURL ? (
-            <Button
-              leftSection={<IconDownload size={16} />}
-              onClick={downloadExistingPDF}
-              color="green"
-            >
-              Download PDF
-            </Button>
-          ) : (
-            <Button
-              leftSection={<IconDownload size={16} />}
-              onClick={generateAndUploadPDF}
-              color="blue"
-            >
-              Generate PDF
-            </Button>
-          )}
-        </Group>
-      </Group>
-
-      {/* Invoice Content - High-quality PDF optimized for both visual appeal and small size */}
-      <Paper
-        ref={invoiceRef}
-        shadow="md"
-        p={30} // Increased padding for better visual appeal
-        radius="md"
-        style={{ 
-          backgroundColor: 'white',
-          maxWidth: '210mm', // A4 width
-          minHeight: '297mm', // A4 height
-          margin: '0 auto',
-          fontSize: '14px', // Larger, more readable font
-          lineHeight: '1.5',
-          fontFamily: 'Inter, Arial, sans-serif', // High-quality font
-          border: '1px solid #e9ecef',
-        }}
-      >
         <Stack gap="lg"> {/* Good spacing for readability */}
           {/* Company Header with Logo - Enlarged and prominent */}
           <Group justify="space-between" align="flex-start">
             <Box>
               <Group mb="md" gap="md">
-                <Logo size={80} style={{ filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.15))' }} /> {/* Even larger logo */}
+                <Logo size={160} style={{ filter: 'drop-shadow(0 6px 16px rgba(0,0,0,0.3))' }} /> {/* Much larger logo */}
                 <Box>
-                  <Title order={2} style={{ color: COMPANY_INFO.colors.primary, fontSize: '18px', fontWeight: 700 }}>
+                  <Title order={2} style={{ color: '#d4af37', fontSize: '18px', fontWeight: 700 }}>
                     {COMPANY_INFO.name}
                   </Title>
-                  <Text c="dimmed" style={{ fontSize: '12px', fontWeight: 500 }}>{COMPANY_INFO.tagline}</Text>
+                  <Text style={{ fontSize: '12px', fontWeight: 500, color: '#a1a1aa' }}>{COMPANY_INFO.tagline}</Text>
                 </Box>
               </Group>
-              <Text style={{ fontSize: '10px', lineHeight: 1.4 }} c="dimmed">
-                <IconMapPin size={12} style={{ display: 'inline', marginRight: 4 }} />
+              <Text style={{ fontSize: '10px', lineHeight: 1.4, color: '#a1a1aa' }}>
+                <IconMapPin size={12} style={{ display: 'inline', marginRight: 4, color: '#d4af37' }} />
                 {getFullAddress()}<br />
-                <IconMail size={12} style={{ display: 'inline', marginRight: 4 }} />
+                <IconMail size={12} style={{ display: 'inline', marginRight: 4, color: '#d4af37' }} />
                 {COMPANY_INFO.contact.email}<br />
-                <IconPhone size={12} style={{ display: 'inline', marginRight: 4 }} />
+                <IconPhone size={12} style={{ display: 'inline', marginRight: 4, color: '#d4af37' }} />
                 {COMPANY_INFO.contact.phone}
               </Text>
             </Box>
             
             <Box ta="right">
-              <Title order={2} c="gray.8" size="lg">INVOICE</Title>
-              <Text size="md" fw={600}>#{invoice.invoiceNumber}</Text>
+              <Title order={2} style={{ color: '#ffffff', fontSize: 'lg' }}>INVOICE</Title>
+              <Text size="md" fw={600} style={{ color: '#d4af37' }}>#{invoice.invoiceNumber}</Text>
               <Badge color={getStatusColor(invoice.status)} size="md" mt="xs">
                 {(invoice.status || 'pending').toUpperCase()}
               </Badge>
             </Box>
           </Group>
 
-          <Divider />
+          <Divider style={{ borderColor: 'rgba(212, 175, 55, 0.3)' }} />
 
           {/* Invoice Details and Customer Info */}
           <Grid>
             <Grid.Col span={6}>
               <Stack gap="sm">
                 <Box>
-                  <Text fw={600} style={{ color: COMPANY_INFO.colors.accent }} mb="xs" size="sm">
-                    <IconCalendar size={14} style={{ display: 'inline', marginRight: 8 }} />
+                  <Text fw={600} style={{ color: '#d4af37' }} mb="xs" size="sm">
+                    <IconCalendar size={14} style={{ display: 'inline', marginRight: 8, color: '#d4af37' }} />
                     Invoice Date:
                   </Text>
-                  <Text size="sm">{formatInvoiceDate(invoice.date)}</Text>
+                  <Text size="sm" style={{ color: '#ffffff' }}>{formatInvoiceDate(invoice.date)}</Text>
                 </Box>
                 
-                {invoice.dueDate && (
-                  <Box>
-                    <Text fw={600} style={{ color: COMPANY_INFO.colors.accent }} mb="xs" size="sm">
-                      <IconCalendar size={14} style={{ display: 'inline', marginRight: 8 }} />
-                      Due Date:
-                    </Text>
-                    <Text size="sm">{formatInvoiceDate(invoice.dueDate)}</Text>
-                  </Box>
-                )}
+                <Box>
+                  <Text fw={600} style={{ color: '#d4af37' }} mb="xs" size="sm">
+                    Permit Number:
+                  </Text>
+                  <Text size="sm" style={{ color: '#ffffff' }}>{invoice.permitNumber || '06756556-1'}</Text>
+                </Box>
               </Stack>
             </Grid.Col>
             
             <Grid.Col span={6}>
               <Box>
-                <Text fw={600} style={{ color: COMPANY_INFO.colors.accent }} mb="xs" size="sm">
-                  <IconUser size={14} style={{ display: 'inline', marginRight: 8 }} />
+                <Text fw={600} style={{ color: '#d4af37' }} mb="xs" size="sm">
+                  <IconUser size={14} style={{ display: 'inline', marginRight: 8, color: '#d4af37' }} />
                   Bill To:
                 </Text>
-                <Text fw={600} size="sm">{invoice.customerName}</Text>
+                <Text fw={600} size="sm" style={{ color: '#ffffff' }}>{invoice.customerName}</Text>
                 {invoice.customerEmail && (
-                  <Text size="xs" c="dimmed">
-                    <IconMail size={12} style={{ display: 'inline', marginRight: 4 }} />
+                  <Text size="xs" style={{ color: '#a1a1aa' }}>
+                    <IconMail size={12} style={{ display: 'inline', marginRight: 4, color: '#d4af37' }} />
                     {invoice.customerEmail}
                   </Text>
                 )}
                 {invoice.customerPhone && (
-                  <Text size="xs" c="dimmed">
-                    <IconPhone size={12} style={{ display: 'inline', marginRight: 4 }} />
+                  <Text size="xs" style={{ color: '#a1a1aa' }}>
+                    <IconPhone size={12} style={{ display: 'inline', marginRight: 4, color: '#d4af37' }} />
                     {invoice.customerPhone}
                   </Text>
                 )}
                 {invoice.customerAddress && (
-                  <Text size="xs" c="dimmed" mt="xs">
-                    <IconMapPin size={12} style={{ display: 'inline', marginRight: 4 }} />
+                  <Text size="xs" style={{ color: '#a1a1aa' }} mt="xs">
+                    <IconMapPin size={12} style={{ display: 'inline', marginRight: 4, color: '#d4af37' }} />
                     {invoice.customerAddress}
                   </Text>
                 )}
@@ -835,41 +1000,155 @@ export default function InvoicePreview({ invoice, onClose, onEdit }) {
             </Grid.Col>
           </Grid>
 
-          <Divider />
+          <Divider style={{ borderColor: 'rgba(212, 175, 55, 0.3)' }} />
 
-          {/* Items Table - Enhanced for better visual quality */}
+          {/* Items Table - Enhanced for perfect alignment and visibility */}
           <Box>
-            <Title order={4} mb="md" style={{ color: COMPANY_INFO.colors.accent, fontSize: '16px', fontWeight: 600 }}>
+            <Title order={4} mb="md" style={{ color: '#d4af37', fontSize: '16px', fontWeight: 600 }}>
               Invoice Items
             </Title>
-            <Table striped withTableBorder style={{ fontSize: '12px', borderWidth: '1px' }}>
+            <Table 
+              striped 
+              withTableBorder 
+              className="invoice-table-enhanced"
+              style={{ 
+                fontSize: '13px', 
+                borderWidth: '2px', 
+                borderColor: 'rgba(212, 175, 55, 0.4)', 
+                tableLayout: 'fixed', 
+                width: '100%',
+                backgroundColor: 'rgba(26, 19, 16, 0.8)', // Darker background for better contrast
+                borderRadius: '8px',
+                overflow: 'hidden'
+              }}
+            >
               <Table.Thead>
-                <Table.Tr style={{ backgroundColor: '#f8f9fa' }}>
-                  <Table.Th style={{ fontWeight: 700, fontSize: '12px', padding: '12px 8px' }}>Description</Table.Th>
-                  <Table.Th style={{ fontWeight: 700, fontSize: '12px', textAlign: 'center', padding: '12px 8px' }}>Qty</Table.Th>
-                  <Table.Th style={{ fontWeight: 700, fontSize: '12px', textAlign: 'right', padding: '12px 8px' }}>Price</Table.Th>
-                  <Table.Th style={{ fontWeight: 700, fontSize: '12px', textAlign: 'right', padding: '12px 8px' }}>Total</Table.Th>
+                <Table.Tr style={{ 
+                  backgroundColor: 'rgba(212, 175, 55, 0.15)', 
+                  borderBottom: '2px solid rgba(212, 175, 55, 0.5)' 
+                }}>
+                  <Table.Th style={{ 
+                    fontWeight: 700, 
+                    fontSize: '14px', 
+                    padding: '16px 12px', 
+                    width: '45%', 
+                    color: '#d4af37',
+                    textAlign: 'left',
+                    verticalAlign: 'middle'
+                  }}>
+                    Product Description
+                  </Table.Th>
+                  <Table.Th style={{ 
+                    fontWeight: 700, 
+                    fontSize: '14px', 
+                    textAlign: 'center', 
+                    padding: '16px 12px', 
+                    width: '12%', 
+                    color: '#d4af37',
+                    verticalAlign: 'middle'
+                  }}>
+                    Qty
+                  </Table.Th>
+                  <Table.Th style={{ 
+                    fontWeight: 700, 
+                    fontSize: '14px', 
+                    textAlign: 'right', 
+                    padding: '16px 12px', 
+                    width: '21.5%', 
+                    color: '#d4af37',
+                    verticalAlign: 'middle'
+                  }}>
+                    Unit Price
+                  </Table.Th>
+                  <Table.Th style={{ 
+                    fontWeight: 700, 
+                    fontSize: '14px', 
+                    textAlign: 'right', 
+                    padding: '16px 12px', 
+                    width: '21.5%', 
+                    color: '#d4af37',
+                    verticalAlign: 'middle'
+                  }}>
+                    Total Amount
+                  </Table.Th>
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>
                 {invoice.items?.map((item, index) => (
-                  <Table.Tr key={index}>
-                    <Table.Td style={{ fontSize: '11px', padding: '10px 8px' }}>
-                      <Text fw={500} size="11px">{item.product || item.name}</Text>
-                      {item.description && (
-                        <Text size="10px" c="dimmed">{item.description}</Text>
+                  <Table.Tr 
+                    key={index} 
+                    style={{ 
+                      borderBottom: '1px solid rgba(212, 175, 55, 0.2)',
+                      backgroundColor: index % 2 === 0 ? 'rgba(26, 19, 16, 0.6)' : 'rgba(26, 19, 16, 0.8)'
+                    }}
+                  >
+                    <Table.Td style={{ 
+                      fontSize: '13px', 
+                      padding: '14px 12px', 
+                      verticalAlign: 'top', 
+                      width: '45%', 
+                      wordWrap: 'break-word',
+                      textAlign: 'left'
+                    }}>
+                      <Text fw={600} size="14px" style={{ 
+                        marginBottom: '4px', 
+                        lineHeight: 1.3, 
+                        color: '#ffffff',
+                        fontWeight: 700
+                      }}>
+                        {item.product || item.name || 'Unknown Product'}
+                      </Text>
+                      {(item.container || item.netContent) && (
+                        <Text size="11px" style={{ 
+                          marginBottom: '2px', 
+                          lineHeight: 1.2, 
+                          color: '#d4af37',
+                          fontWeight: 500
+                        }}>
+                          {item.container && item.netContent ? `${item.container} (${item.netContent})` : (item.container || item.netContent)}
+                        </Text>
                       )}
-                      {item.container && (
-                        <Text size="9px" c="dimmed">{item.container} ({item.netContent})</Text>
+                      {item.description && (
+                        <Text size="10px" style={{ 
+                          fontStyle: 'italic', 
+                          lineHeight: 1.2, 
+                          color: '#a1a1aa' 
+                        }}>
+                          {item.description}
+                        </Text>
                       )}
                     </Table.Td>
-                    <Table.Td style={{ fontSize: '11px', textAlign: 'center', padding: '10px 8px' }}>
+                    <Table.Td style={{ 
+                      fontSize: '14px', 
+                      textAlign: 'center', 
+                      padding: '14px 12px', 
+                      verticalAlign: 'middle', 
+                      fontWeight: 600, 
+                      width: '12%', 
+                      color: '#ffffff'
+                    }}>
                       {item.quantity}
                     </Table.Td>
-                    <Table.Td style={{ fontSize: '11px', textAlign: 'right', padding: '10px 8px' }}>
+                    <Table.Td style={{ 
+                      fontSize: '14px', 
+                      textAlign: 'right', 
+                      padding: '14px 12px', 
+                      verticalAlign: 'middle', 
+                      fontWeight: 500, 
+                      width: '21.5%', 
+                      color: '#ffffff'
+                    }}>
                       $ {item.price?.toFixed(2)}
                     </Table.Td>
-                    <Table.Td style={{ fontSize: '11px', textAlign: 'right', fontWeight: 600, padding: '10px 8px' }}>
+                    <Table.Td style={{ 
+                      fontSize: '14px', 
+                      textAlign: 'right', 
+                      fontWeight: 700, 
+                      padding: '14px 12px', 
+                      verticalAlign: 'middle', 
+                      color: '#d4af37', 
+                      width: '21.5%'
+                    }}>
                       $ {(item.quantity * item.price)?.toFixed(2)}
                     </Table.Td>
                   </Table.Tr>
@@ -885,29 +1164,8 @@ export default function InvoicePreview({ invoice, onClose, onEdit }) {
               <Grid.Col span={4}>
                 <Stack gap="xs">
                   <Group justify="space-between">
-                    <Text size="sm" fw={500}>Subtotal:</Text>
-                    <Text size="sm">$ {invoice.subtotal?.toFixed(2) || '0.00'}</Text>
-                  </Group>
-                  
-                  {invoice.tax > 0 && (
-                    <Group justify="space-between">
-                      <Text size="sm" fw={500}>Tax ({invoice.taxRate || 0}%):</Text>
-                      <Text size="sm">$ {invoice.tax?.toFixed(2) || '0.00'}</Text>
-                    </Group>
-                  )}
-                  
-                  {invoice.discount > 0 && (
-                    <Group justify="space-between">
-                      <Text size="sm" fw={500} c="green">Discount:</Text>
-                      <Text size="sm" c="green">-$ {invoice.discount?.toFixed(2) || '0.00'}</Text>
-                    </Group>
-                  )}
-                  
-                  <Divider />
-                  
-                  <Group justify="space-between">
-                    <Text fw={700} size="md">Total:</Text>
-                    <Text fw={700} size="md" style={{ color: COMPANY_INFO.colors.primary }}>
+                    <Text fw={700} size="md" style={{ color: '#ffffff' }}>Total:</Text>
+                    <Text fw={700} size="md" style={{ color: '#d4af37' }}>
                       $ {invoice.total?.toFixed(2) || '0.00'}
                     </Text>
                   </Group>
@@ -919,26 +1177,27 @@ export default function InvoicePreview({ invoice, onClose, onEdit }) {
           {/* Notes */}
           {invoice.notes && (
             <Box>
-              <Text fw={600} style={{ color: COMPANY_INFO.colors.accent }} mb="xs" size="sm">
+              <Text fw={600} style={{ color: '#d4af37' }} mb="xs" size="sm">
                 Notes:
               </Text>
-              <Text size="xs" style={{ whiteSpace: 'pre-wrap' }}>
+              <Text size="xs" style={{ whiteSpace: 'pre-wrap', color: '#ffffff' }}>
                 {invoice.notes}
               </Text>
             </Box>
           )}
 
           {/* Footer */}
-          <Box mt="xl" pt="md" style={{ borderTop: '1px solid #e9ecef' }}>
-            <Text ta="center" size="xs" c="dimmed">
+          <Box mt="xl" pt="md" style={{ borderTop: '1px solid rgba(212, 175, 55, 0.3)' }}>
+            <Text ta="center" size="xs" style={{ color: '#a1a1aa' }}>
               Thank you for your business! Please remit payment by the due date.
             </Text>
-            <Text ta="center" size="xs" c="dimmed" mt="xs">
+            <Text ta="center" size="xs" style={{ color: '#a1a1aa' }} mt="xs">
               {COMPANY_INFO.name} | {getContactLine()}
             </Text>
           </Box>
         </Stack>
       </Paper>
     </Container>
+    </div>
   );
 }

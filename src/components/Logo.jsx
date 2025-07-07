@@ -1,9 +1,7 @@
 import React from 'react';
-import dashboardLogo from '../assets/Logo.svg';
-import generalLogo from '../assets/peak brew.svg';
+import logoSrc from '../assets/Logo.svg';
 
-export default function Logo({ size = 40, className = '', style = {}, forDashboard = false }) {
-  const logoSrc = forDashboard ? dashboardLogo : generalLogo;
+export default function Logo({ size = 80, className = '', style = {}, forDashboard = false }) {
   
   return (
     <img 
@@ -14,6 +12,9 @@ export default function Logo({ size = 40, className = '', style = {}, forDashboa
       className={`peak-brew-logo ${className}`}
       style={{ 
         objectFit: 'contain',
+        filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.25))',
+        maxWidth: '100%',
+        height: 'auto',
         ...style 
       }}
     />

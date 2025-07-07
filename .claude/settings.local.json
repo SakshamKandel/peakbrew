@@ -1,7 +1,14 @@
 {
   "permissions": {
     "allow": [
-      "Bash(cd:*)"
+      "Bash(cd:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm run lint)",
+      "Bash(grep:*)",
+      "Bash(npm run lint:*)",
+      "WebFetch(domain:reactbits.dev)",
+      "WebFetch(domain:react-spectrum.adobe.com)",
+      "Bash(npm install:*)"
     ],
     "deny": []
   }

@@ -1,21 +1,15 @@
 rules_version = '2';
 
-// Allow authenticated users to read and write their own files
 service firebase.storage {
   match /b/{bucket}/o {
-    // Allow authenticated users to read and write invoice files
-    match /invoices/{userId}/{allPaths=**} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
-    
-    // Allow authenticated users to upload PDF files with their UID in the path
-    match /invoices/{invoiceId}.pdf {
+    // Allow authenticated users to read and write invoice PDF files
+    match /invoices/{invoiceId} {
       allow read, write: if request.auth != null;
     }
     
-    // Default deny all other access
-    match /{allPaths=**} {
-      allow read, write: if false;
+    // Allow authenticated users to read and write any files in invoices folder
+    match /invoices/{allPaths=**} {
+      allow read, write: if request.auth != null;
     }
   }
 }

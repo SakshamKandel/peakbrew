@@ -65,6 +65,7 @@ const InvoiceForm = ({ onSave, onCancel, invoice = null }) => {
     customerEmail: '',
     customerPhone: '',
     customerAddress: '',
+    permitNumber: '06756556-1',
     items: [],
     notes: '',
     status: 'pending'
@@ -249,8 +250,7 @@ const InvoiceForm = ({ onSave, onCancel, invoice = null }) => {
     e.preventDefault();
     
     const subtotal = formData.items.reduce((sum, item) => sum + item.total, 0);
-    const tax = subtotal * 0.1;
-    const total = subtotal + tax;
+    const total = subtotal;
 
     // Save customer data if it's new - temporarily disabled
     // if (formData.customerName && formData.customerEmail) {
@@ -269,18 +269,26 @@ const InvoiceForm = ({ onSave, onCancel, invoice = null }) => {
       ...formData,
       date: validDate,
       subtotal,
-      tax,
       total
     });
   };
 
   const subtotal = formData.items.reduce((sum, item) => sum + item.total, 0);
-  const tax = subtotal * 0.1;
-  const total = subtotal + tax;
+  const total = subtotal;
 
   return (
-    <Container size="xl" py="xl">
-      <Paper shadow="md" p="xl" radius="md">
+    <div style={{
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg, #4a3728 0%, #2d1f1a 50%, #1a1310 100%)',
+      padding: '20px'
+    }}>
+      <Container size="xl" py="xl">
+        <Paper shadow="xl" p="xl" radius="xl" style={{
+          background: 'linear-gradient(135deg, rgba(212, 175, 55, 0.08) 0%, rgba(74, 55, 40, 0.03) 100%)',
+          backdropFilter: 'blur(20px)',
+          border: '1px solid rgba(212, 175, 55, 0.2)',
+          color: '#ffffff'
+        }}>
         <form onSubmit={handleSubmit}>
           <Stack gap="xl">
             {/* Header */}
@@ -293,23 +301,23 @@ const InvoiceForm = ({ onSave, onCancel, invoice = null }) => {
                 <IconArrowLeft size={20} />
               </ActionIcon>
               <Group>
-                <Logo size={70} style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))' }} />
+                <Logo size={150} style={{ filter: 'drop-shadow(0 6px 12px rgba(0,0,0,0.2))' }} />
                 <div>
-                  <Title order={2} style={{ color: COMPANY_INFO.colors.primary }}>
+                  <Title order={2} style={{ color: '#d4af37' }}>
                     {invoice ? 'Edit Invoice' : 'Create Invoice'}
                   </Title>
-                  <Text c="dimmed">{COMPANY_INFO.name}</Text>
+                  <Text style={{ color: '#a1a1aa' }}>{COMPANY_INFO.name}</Text>
                 </div>
               </Group>
             </Group>
 
-            <Divider />
+            <Divider style={{ borderColor: 'rgba(212, 175, 55, 0.2)' }} />
 
             {/* Invoice Details */}
             <Stack gap="md">
               <Group>
-                <IconCalendar size={20} color="#1971c2" />
-                <Title order={3}>Invoice Details</Title>
+                <IconCalendar size={20} color="#d4af37" />
+                <Title order={3} style={{ color: '#d4af37' }}>Invoice Details</Title>
               </Group>
               
               <Grid>
@@ -320,6 +328,17 @@ const InvoiceForm = ({ onSave, onCancel, invoice = null }) => {
                     value={formData.invoiceNumber}
                     onChange={(e) => setFormData(prev => ({ ...prev, invoiceNumber: e.target.value }))}
                     required
+                    styles={{
+                      label: { color: '#d4af37', fontWeight: 600 },
+                      input: {
+                        backgroundColor: 'rgba(74, 55, 40, 0.3)',
+                        border: '1px solid rgba(212, 175, 55, 0.3)',
+                        color: '#ffffff',
+                        '&:focus': {
+                          borderColor: '#d4af37'
+                        }
+                      }
+                    }}
                   />
                 </Grid.Col>
                 
@@ -330,18 +349,50 @@ const InvoiceForm = ({ onSave, onCancel, invoice = null }) => {
                     value={formData.date}
                     onChange={(date) => setFormData(prev => ({ ...prev, date }))}
                     required
+                    styles={{
+                      label: { color: '#d4af37', fontWeight: 600 },
+                      input: {
+                        backgroundColor: 'rgba(74, 55, 40, 0.3)',
+                        border: '1px solid rgba(212, 175, 55, 0.3)',
+                        color: '#ffffff',
+                        '&:focus': {
+                          borderColor: '#d4af37'
+                        }
+                      }
+                    }}
+                  />
+                </Grid.Col>
+                
+                <Grid.Col span={{ base: 12, md: 6 }}>
+                  <TextInput
+                    label="Permit Number"
+                    placeholder="06756556-1"
+                    value={formData.permitNumber}
+                    onChange={(e) => setFormData(prev => ({ ...prev, permitNumber: e.target.value }))}
+                    required
+                    styles={{
+                      label: { color: '#d4af37', fontWeight: 600 },
+                      input: {
+                        backgroundColor: 'rgba(74, 55, 40, 0.3)',
+                        border: '1px solid rgba(212, 175, 55, 0.3)',
+                        color: '#ffffff',
+                        '&:focus': {
+                          borderColor: '#d4af37'
+                        }
+                      }
+                    }}
                   />
                 </Grid.Col>
               </Grid>
             </Stack>
 
-            <Divider />
+            <Divider style={{ borderColor: 'rgba(212, 175, 55, 0.2)' }} />
 
             {/* Customer Information */}
             <Stack gap="md">
               <Group>
-                <IconUser size={20} color="#1971c2" />
-                <Title order={3}>Customer Information</Title>
+                <IconUser size={20} color="#d4af37" />
+                <Title order={3} style={{ color: '#d4af37' }}>Customer Information</Title>
               </Group>
               
               <Grid>
@@ -356,6 +407,17 @@ const InvoiceForm = ({ onSave, onCancel, invoice = null }) => {
                     }}
                     leftSection={<IconUser size={16} />}
                     required
+                    styles={{
+                      label: { color: '#d4af37', fontWeight: 600 },
+                      input: {
+                        backgroundColor: 'rgba(74, 55, 40, 0.3)',
+                        border: '1px solid rgba(212, 175, 55, 0.3)',
+                        color: '#ffffff',
+                        '&:focus': {
+                          borderColor: '#d4af37'
+                        }
+                      }
+                    }}
                   />
                 </Grid.Col>
                 
@@ -367,6 +429,17 @@ const InvoiceForm = ({ onSave, onCancel, invoice = null }) => {
                     value={formData.customerEmail}
                     onChange={(e) => setFormData(prev => ({ ...prev, customerEmail: e.target.value }))}
                     leftSection={<IconMail size={16} />}
+                    styles={{
+                      label: { color: '#d4af37', fontWeight: 600 },
+                      input: {
+                        backgroundColor: 'rgba(74, 55, 40, 0.3)',
+                        border: '1px solid rgba(212, 175, 55, 0.3)',
+                        color: '#ffffff',
+                        '&:focus': {
+                          borderColor: '#d4af37'
+                        }
+                      }
+                    }}
                   />
                 </Grid.Col>
                 
@@ -377,6 +450,17 @@ const InvoiceForm = ({ onSave, onCancel, invoice = null }) => {
                     value={formData.customerPhone}
                     onChange={(e) => setFormData(prev => ({ ...prev, customerPhone: e.target.value }))}
                     leftSection={<IconPhone size={16} />}
+                    styles={{
+                      label: { color: '#d4af37', fontWeight: 600 },
+                      input: {
+                        backgroundColor: 'rgba(74, 55, 40, 0.3)',
+                        border: '1px solid rgba(212, 175, 55, 0.3)',
+                        color: '#ffffff',
+                        '&:focus': {
+                          borderColor: '#d4af37'
+                        }
+                      }
+                    }}
                   />
                 </Grid.Col>
                 
@@ -387,44 +471,66 @@ const InvoiceForm = ({ onSave, onCancel, invoice = null }) => {
                     value={formData.customerAddress}
                     onChange={(e) => setFormData(prev => ({ ...prev, customerAddress: e.target.value }))}
                     minRows={3}
+                    styles={{
+                      label: { color: '#d4af37', fontWeight: 600 },
+                      input: {
+                        backgroundColor: 'rgba(74, 55, 40, 0.3)',
+                        border: '1px solid rgba(212, 175, 55, 0.3)',
+                        color: '#ffffff',
+                        '&:focus': {
+                          borderColor: '#d4af37'
+                        }
+                      }
+                    }}
                   />
                 </Grid.Col>
               </Grid>
             </Stack>
 
-            <Divider />
+            <Divider style={{ borderColor: 'rgba(212, 175, 55, 0.2)' }} />
 
             {/* Items Section */}
             <Stack gap="md">
               <Group justify="space-between">
                 <Group>
-                  <Logo size={60} style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))' }} />
-                  <Title order={3}>Invoice Items</Title>
+                  <Logo size={140} style={{ filter: 'drop-shadow(0 6px 12px rgba(0,0,0,0.2))' }} />
+                  <Title order={3} style={{ color: '#d4af37' }}>Invoice Items</Title>
                 </Group>
                 <Button
                   leftSection={<IconPlus size={16} />}
                   onClick={addItem}
                   variant="filled"
+                  style={{
+                    background: 'linear-gradient(135deg, #d4af37 0%, #f4d03f 100%)',
+                    color: '#1a1a1a',
+                    border: 'none',
+                    fontWeight: 600
+                  }}
                 >
                   Add Item
                 </Button>
               </Group>
 
               {formData.items.length > 0 ? (
-                <Table>
+                <Table style={{
+                  backgroundColor: 'rgba(74, 55, 40, 0.2)',
+                  borderRadius: '12px',
+                  overflow: 'hidden',
+                  border: '2px solid rgba(212, 175, 55, 0.3)'
+                }}>
                   <Table.Thead>
-                    <Table.Tr>
-                      <Table.Th>Product</Table.Th>
-                      <Table.Th>Quantity</Table.Th>
-                      <Table.Th>Price ($)</Table.Th>
-                      <Table.Th>Total ($)</Table.Th>
-                      <Table.Th width={50}></Table.Th>
+                    <Table.Tr style={{ backgroundColor: 'rgba(212, 175, 55, 0.2)' }}>
+                      <Table.Th style={{ color: '#d4af37', borderColor: 'rgba(212, 175, 55, 0.2)', padding: '16px 12px', fontSize: '14px', fontWeight: 700, width: '40%', minWidth: '200px' }}>Product</Table.Th>
+                      <Table.Th style={{ color: '#d4af37', borderColor: 'rgba(212, 175, 55, 0.2)', padding: '16px 12px', fontSize: '14px', fontWeight: 700, textAlign: 'center', width: '12%', minWidth: '80px' }}>Qty</Table.Th>
+                      <Table.Th style={{ color: '#d4af37', borderColor: 'rgba(212, 175, 55, 0.2)', padding: '16px 12px', fontSize: '14px', fontWeight: 700, textAlign: 'right', width: '20%', minWidth: '100px' }}>Price ($)</Table.Th>
+                      <Table.Th style={{ color: '#d4af37', borderColor: 'rgba(212, 175, 55, 0.2)', padding: '16px 12px', fontSize: '14px', fontWeight: 700, textAlign: 'right', width: '20%', minWidth: '100px' }}>Total ($)</Table.Th>
+                      <Table.Th width="8%" style={{ borderColor: 'rgba(212, 175, 55, 0.2)', padding: '16px 8px', textAlign: 'center', minWidth: '60px' }}>Action</Table.Th>
                     </Table.Tr>
                   </Table.Thead>
                   <Table.Tbody>
                     {formData.items.map((item, index) => (
-                      <Table.Tr key={index}>
-                        <Table.Td>
+                      <Table.Tr key={index} style={{ borderColor: 'rgba(212, 175, 55, 0.1)' }}>
+                        <Table.Td style={{ borderColor: 'rgba(212, 175, 55, 0.1)', padding: '12px', verticalAlign: 'top', width: '40%' }}>
                           <Select
                             placeholder="Select a product"
                             data={beerProducts.map(product => ({
@@ -435,33 +541,86 @@ const InvoiceForm = ({ onSave, onCancel, invoice = null }) => {
                             onChange={(value) => updateItem(index, 'productId', value)}
                             searchable
                             required
+                            styles={{
+                              input: {
+                                backgroundColor: 'rgba(74, 55, 40, 0.3)',
+                                border: '1px solid rgba(212, 175, 55, 0.3)',
+                                color: '#ffffff',
+                                fontSize: '13px',
+                                '&:focus': {
+                                  borderColor: '#d4af37'
+                                }
+                              },
+                              dropdown: {
+                                backgroundColor: 'rgba(74, 55, 40, 0.95)',
+                                border: '1px solid rgba(212, 175, 55, 0.2)'
+                              },
+                              option: {
+                                color: '#ffffff',
+                                fontSize: '13px',
+                                '&[data-selected]': {
+                                  backgroundColor: 'rgba(212, 175, 55, 0.3)'
+                                }
+                              }
+                            }}
                           />
                         </Table.Td>
-                        <Table.Td>
+                        <Table.Td style={{ borderColor: 'rgba(212, 175, 55, 0.1)', padding: '12px', textAlign: 'center', width: '12%' }}>
                           <NumberInput
                             min={1}
                             value={item.quantity}
                             onChange={(value) => updateItem(index, 'quantity', value)}
                             required
+                            size="sm"
+                            styles={{
+                              input: {
+                                backgroundColor: 'rgba(74, 55, 40, 0.3)',
+                                border: '1px solid rgba(212, 175, 55, 0.3)',
+                                color: '#ffffff',
+                                textAlign: 'center',
+                                fontSize: '13px',
+                                '&:focus': {
+                                  borderColor: '#d4af37'
+                                }
+                              }
+                            }}
                           />
                         </Table.Td>
-                        <Table.Td>
+                        <Table.Td style={{ borderColor: 'rgba(212, 175, 55, 0.1)', padding: '12px', textAlign: 'right', width: '20%' }}>
                           <NumberInput
                             min={0}
                             decimalScale={2}
                             value={item.price}
                             onChange={(value) => updateItem(index, 'price', value)}
                             required
+                            size="sm"
+                            styles={{
+                              input: {
+                                backgroundColor: 'rgba(74, 55, 40, 0.3)',
+                                border: '1px solid rgba(212, 175, 55, 0.3)',
+                                color: '#ffffff',
+                                textAlign: 'right',
+                                fontSize: '13px',
+                                '&:focus': {
+                                  borderColor: '#d4af37'
+                                }
+                              }
+                            }}
                           />
                         </Table.Td>
-                        <Table.Td>
-                          <Text fw={500}>$ {item.total.toFixed(2)}</Text>
+                        <Table.Td style={{ borderColor: 'rgba(212, 175, 55, 0.1)', padding: '12px', textAlign: 'right', width: '20%' }}>
+                          <Text fw={600} style={{ color: '#d4af37', fontSize: '14px' }}>$ {item.total.toFixed(2)}</Text>
                         </Table.Td>
-                        <Table.Td>
+                        <Table.Td style={{ borderColor: 'rgba(212, 175, 55, 0.1)', padding: '12px', textAlign: 'center', width: '8%' }}>
                           <ActionIcon
                             color="red"
                             variant="light"
                             onClick={() => removeItem(index)}
+                            size="sm"
+                            style={{
+                              backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                              color: '#ef4444'
+                            }}
                           >
                             <IconTrash size={16} />
                           </ActionIcon>
@@ -471,31 +630,29 @@ const InvoiceForm = ({ onSave, onCancel, invoice = null }) => {
                   </Table.Tbody>
                 </Table>
               ) : (
-                <Paper p="xl" ta="center" c="dimmed">
-                  <Logo size={80} style={{ opacity: 0.25, filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.1))' }} />
-                  <Text size="lg" mt="md">No items added yet</Text>
-                  <Text size="sm">Click "Add Item" to get started</Text>
+                <Paper p="xl" ta="center" style={{
+                  backgroundColor: 'rgba(74, 55, 40, 0.2)',
+                  color: '#a1a1aa',
+                  border: '1px solid rgba(212, 175, 55, 0.2)'
+                }}>
+                  <Logo size={160} style={{ opacity: 0.25, filter: 'drop-shadow(0 6px 12px rgba(0,0,0,0.15))' }} />
+                  <Text size="lg" mt="md" style={{ color: '#a1a1aa' }}>No items added yet</Text>
+                  <Text size="sm" style={{ color: '#a1a1aa' }}>Click "Add Item" to get started</Text>
                 </Paper>
               )}
 
               {/* Summary */}
               {formData.items.length > 0 && (
                 <Box>
-                  <Paper p="md" bg="gray.0" radius="md">
+                  <Paper p="md" radius="md" style={{
+                    backgroundColor: 'rgba(212, 175, 55, 0.1)',
+                    border: '1px solid rgba(212, 175, 55, 0.2)'
+                  }}>
                     <Group justify="flex-end">
                       <Stack gap="xs" align="flex-end">
                         <Group gap="xl">
-                          <Text>Subtotal:</Text>
-                          <Text>$ {subtotal.toFixed(2)}</Text>
-                        </Group>
-                        <Group gap="xl">
-                          <Text>Tax (10%):</Text>
-                          <Text>$ {tax.toFixed(2)}</Text>
-                        </Group>
-                        <Divider w="100%" />
-                        <Group gap="xl">
-                          <Text fw={700} size="lg">Total:</Text>
-                          <Text fw={700} size="lg" c="blue">$ {total.toFixed(2)}</Text>
+                          <Text fw={700} size="lg" style={{ color: '#ffffff' }}>Total:</Text>
+                          <Text fw={700} size="lg" style={{ color: '#d4af37' }}>$ {total.toFixed(2)}</Text>
                         </Group>
                       </Stack>
                     </Group>
@@ -504,7 +661,7 @@ const InvoiceForm = ({ onSave, onCancel, invoice = null }) => {
               )}
             </Stack>
 
-            <Divider />
+            <Divider style={{ borderColor: 'rgba(212, 175, 55, 0.2)' }} />
 
             {/* Notes */}
             <Textarea
@@ -513,6 +670,17 @@ const InvoiceForm = ({ onSave, onCancel, invoice = null }) => {
               value={formData.notes}
               onChange={(e) => setFormData(prev => ({ ...prev, notes: e.target.value }))}
               minRows={3}
+              styles={{
+                label: { color: '#d4af37', fontWeight: 600 },
+                input: {
+                  backgroundColor: 'rgba(74, 55, 40, 0.3)',
+                  border: '1px solid rgba(212, 175, 55, 0.3)',
+                  color: '#ffffff',
+                  '&:focus': {
+                    borderColor: '#d4af37'
+                  }
+                }
+              }}
             />
 
             {/* Status */}
@@ -527,6 +695,27 @@ const InvoiceForm = ({ onSave, onCancel, invoice = null }) => {
               value={formData.status}
               onChange={(value) => setFormData(prev => ({ ...prev, status: value }))}
               required
+              styles={{
+                label: { color: '#d4af37', fontWeight: 600 },
+                input: {
+                  backgroundColor: 'rgba(74, 55, 40, 0.3)',
+                  border: '1px solid rgba(212, 175, 55, 0.3)',
+                  color: '#ffffff',
+                  '&:focus': {
+                    borderColor: '#d4af37'
+                  }
+                },
+                dropdown: {
+                  backgroundColor: 'rgba(74, 55, 40, 0.95)',
+                  border: '1px solid rgba(212, 175, 55, 0.2)'
+                },
+                option: {
+                  color: '#ffffff',
+                  '&[data-selected]': {
+                    backgroundColor: 'rgba(212, 175, 55, 0.3)'
+                  }
+                }
+              }}
             />
 
             {/* Actions */}
@@ -534,22 +723,32 @@ const InvoiceForm = ({ onSave, onCancel, invoice = null }) => {
               <Button
                 variant="light"
                 onClick={onCancel}
+                style={{
+                  backgroundColor: 'rgba(156, 163, 175, 0.1)',
+                  color: '#9ca3af',
+                  border: '1px solid rgba(156, 163, 175, 0.2)'
+                }}
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
                 leftSection={<IconDeviceFloppy size={16} />}
-                gradient={{ from: 'blue', to: 'cyan' }}
-                variant="gradient"
+                style={{
+                  background: 'linear-gradient(135deg, #d4af37 0%, #f4d03f 100%)',
+                  color: '#1a1a1a',
+                  border: 'none',
+                  fontWeight: 600
+                }}
               >
                 {invoice ? 'Update Invoice' : 'Create Invoice'}
               </Button>
             </Group>
           </Stack>
         </form>
-      </Paper>
-    </Container>
+        </Paper>
+      </Container>
+    </div>
   );
 };
 

@@ -47,14 +47,134 @@ body {
   filter: drop-shadow(0 4px 12px rgba(212, 175, 55, 0.3));
 }
 
-/* High-quality PDF print optimizations for 100-120KB target */
+/* Enhanced logo styling */
+.peak-brew-logo-enhanced {
+  filter: drop-shadow(0 6px 16px rgba(212, 175, 55, 0.3));
+  transition: all 0.3s ease;
+  max-width: 100%;
+  height: auto;
+}
+
+.peak-brew-logo-enhanced:hover {
+  transform: scale(1.02);
+  filter: drop-shadow(0 8px 20px rgba(212, 175, 55, 0.4));
+}
+
+/* Large logo styles for prominence */
+.logo-large {
+  width: 160px;
+  height: 160px;
+  object-fit: contain;
+}
+
+.logo-medium {
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
+}
+
+.logo-small {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+}
+
+/* Enhanced table styling for perfect alignment */
+.invoice-table-enhanced {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.invoice-table-enhanced th,
+.invoice-table-enhanced td {
+  text-align: left;
+  vertical-align: top;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  -webkit-hyphens: auto;
+  hyphens: auto;
+  border: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+.invoice-table-enhanced th:nth-child(1),
+.invoice-table-enhanced td:nth-child(1) {
+  width: 45%;
+  padding: 16px 12px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.invoice-table-enhanced th:nth-child(2),
+.invoice-table-enhanced td:nth-child(2) {
+  width: 12%;
+  text-align: center;
+  vertical-align: middle;
+  padding: 16px 8px;
+}
+
+.invoice-table-enhanced th:nth-child(3),
+.invoice-table-enhanced td:nth-child(3) {
+  width: 21.5%;
+  text-align: right;
+  vertical-align: middle;
+  padding: 16px 12px;
+}
+
+.invoice-table-enhanced th:nth-child(4),
+.invoice-table-enhanced td:nth-child(4) {
+  width: 21.5%;
+  text-align: right;
+  vertical-align: middle;
+  padding: 16px 12px;
+}
+
+.invoice-table-enhanced th:nth-child(5),
+.invoice-table-enhanced td:nth-child(5) {
+  width: 8%;
+  text-align: center;
+  vertical-align: middle;
+  padding: 16px 8px;
+}
+
+/* Table form input improvements */
+.table-input-container {
+  width: 100%;
+  min-width: 0;
+}
+
+.table-number-input {
+  width: 100%;
+  text-align: center;
+}
+
+.table-price-input {
+  width: 100%;
+  text-align: right;
+}
+
+/* Remove all gradients and glass effects */
+
+.peak-brew-logo {
+  filter: drop-shadow(0 2px 6px rgba(212, 175, 55, 0.2));
+  transition: all 0.3s ease;
+}
+
+.peak-brew-logo:hover {
+  transform: scale(1.02);
+  filter: drop-shadow(0 4px 12px rgba(212, 175, 55, 0.3));
+}
+
+/* High-quality PDF print optimizations with better text visibility */
 @media print {
   body {
     font-size: 15px; /* Slightly larger for better readability */
     line-height: 1.6; /* Better line spacing */
     font-family: 'Inter', Arial, sans-serif; /* High-quality font for better text rendering */
-    color: #000; /* Pure black for maximum contrast */
-    background: white;
+    color: #000 !important; /* Pure black for maximum contrast */
+    background: white !important;
   }
   
   .no-print, .skip-pdf {
@@ -65,6 +185,38 @@ body {
   * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+    color: #000 !important; /* Force black text for everything */
+  }
+  
+  /* Force text visibility and contrast */
+  .mantine-Text-root,
+  .mantine-Title-root,
+  p, span, div, td, th {
+    color: #000 !important;
+    background-color: transparent !important;
+  }
+  
+  /* Better table styling for print */
+  .invoice-table-enhanced,
+  .mantine-Table-root {
+    background-color: white !important;
+    border: 2px solid #000 !important;
+  }
+  
+  .invoice-table-enhanced th,
+  .invoice-table-enhanced td,
+  .mantine-Table-th,
+  .mantine-Table-td {
+    background-color: white !important;
+    color: #000 !important;
+    border: 1px solid #333 !important;
+    padding: 12px !important;
+  }
+  
+  .invoice-table-enhanced th,
+  .mantine-Table-th {
+    background-color: #f5f5f5 !important;
+    font-weight: bold !important;
   }
   
   /* Better spacing for PDF */
@@ -72,7 +224,19 @@ body {
     filter: none; /* Remove shadows for better PDF compression */
     image-rendering: -webkit-optimize-contrast; /* Better image quality */
     image-rendering: -moz-crisp-edges;
+    image-rendering: -webkit-optimize-contrast;
     image-rendering: crisp-edges;
+  }
+  
+  /* Override dark theme colors for print */
+  [style*="color: #ffffff"],
+  [style*="color: #d4af37"],
+  [style*="color: #a1a1aa"] {
+    color: #000 !important;
+  }
+  
+  [style*="background"] {
+    background: white !important;
   }
   
   /* Optimize table printing with better borders */
@@ -80,6 +244,7 @@ body {
     border-collapse: collapse;
     width: 100%;
     border: 2px solid #000; /* Strong black borders */
+    background: white !important;
   }
   
   th, td {
@@ -87,7 +252,8 @@ body {
     padding: 12px; /* More padding for professional look */
     text-align: left;
     font-size: 13px; /* Larger font for readability */
-    color: #000; /* Pure black text */
+    color: #000 !important; /* Pure black text */
+    background: white !important;
   }
   
   th {
@@ -197,4 +363,151 @@ body {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #d68910;
+}
+
+/* Loading Screen Split Text Animations - Enhanced */
+.loading-welcome-text-enhanced {
+  font-family: 'Helvetica Neue', 'Helvetica', Arial, sans-serif !important;
+  font-size: 4.5rem;
+  font-weight: 800 !important;
+  color: #ffffff;
+  text-shadow: 
+    0 0 20px rgba(255, 255, 255, 0.5),
+    0 6px 20px rgba(0,0,0,0.8),
+    0 2px 4px rgba(0,0,0,0.6);
+  letter-spacing: 3px;
+  margin: 0;
+  line-height: 1.1;
+  text-transform: uppercase;
+  background: linear-gradient(45deg, #ffffff, #f8f9fa, #ffffff);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmer 3s ease-in-out infinite;
+}
+
+.loading-company-text-enhanced {
+  font-family: 'Helvetica Neue', 'Helvetica', Arial, sans-serif !important;
+  font-size: 3rem;
+  font-weight: 700 !important;
+  background: linear-gradient(45deg, #d4af37, #f4d03f, #d4af37);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
+  letter-spacing: 2px;
+  margin: 0;
+  line-height: 1.2;
+  text-transform: uppercase;
+  animation: glow 2s ease-in-out infinite alternate;
+}
+
+@keyframes shimmer {
+  0%, 100% {
+    filter: brightness(1) drop-shadow(0 0 10px rgba(255, 255, 255, 0.3));
+  }
+  50% {
+    filter: brightness(1.2) drop-shadow(0 0 20px rgba(255, 255, 255, 0.6));
+  }
+}
+
+@keyframes glow {
+  0% {
+    text-shadow: 
+      0 4px 15px rgba(212, 175, 55, 0.4),
+      0 0 30px rgba(212, 175, 55, 0.3);
+  }
+  100% {
+    text-shadow: 
+      0 4px 25px rgba(212, 175, 55, 0.8),
+      0 0 50px rgba(212, 175, 55, 0.5);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 0.8;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.02);
+  }
+}
+
+.split-parent {
+  overflow: visible !important;
+}
+
+.split-parent .split-line,
+.split-parent div {
+  overflow: visible !important;
+}
+
+/* Legacy loading text styles */
+.loading-welcome-text {
+  font-family: 'Helvetica', Arial, sans-serif !important;
+  font-size: 3.5rem;
+  font-weight: 300;
+  color: #ffffff;
+  text-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  letter-spacing: 2px;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.loading-company-text {
+  font-family: 'Helvetica', Arial, sans-serif !important;
+  font-size: 2.2rem;
+  font-weight: 400;
+  color: #d4af37;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  letter-spacing: 1px;
+  margin: 0;
+  line-height: 1.3;
+}
+
+/* Responsive enhanced loading text */
+@media (max-width: 768px) {
+  .loading-welcome-text-enhanced {
+    font-size: 3.2rem;
+    letter-spacing: 2px;
+  }
+  
+  .loading-company-text-enhanced {
+    font-size: 2.3rem;
+    letter-spacing: 1px;
+  }
+  
+  .loading-welcome-text {
+    font-size: 2.5rem;
+    letter-spacing: 1px;
+  }
+  
+  .loading-company-text {
+    font-size: 1.8rem;
+    letter-spacing: 0.5px;
+  }
+}
+
+@media (max-width: 480px) {
+  .loading-welcome-text-enhanced {
+    font-size: 2.5rem;
+    letter-spacing: 1px;
+  }
+  
+  .loading-company-text-enhanced {
+    font-size: 1.8rem;
+    letter-spacing: 0.5px;
+  }
+  
+  .loading-welcome-text {
+    font-size: 2rem;
+    letter-spacing: 0.5px;
+  }
+  
+  .loading-company-text {
+    font-size: 1.5rem;
+    letter-spacing: 0px;
+  }
 }
