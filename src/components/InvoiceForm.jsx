@@ -66,6 +66,7 @@ const InvoiceForm = ({ onSave, onCancel, invoice = null }) => {
     customerPhone: '',
     customerAddress: '',
     permitNumber: '06756556-1',
+    paymentMethod: 'Cash', // Default payment method
     items: [],
     notes: '',
     status: 'pending'
@@ -280,19 +281,22 @@ const InvoiceForm = ({ onSave, onCancel, invoice = null }) => {
     <div style={{
       minHeight: '100vh',
       background: 'linear-gradient(135deg, #4a3728 0%, #2d1f1a 50%, #1a1310 100%)',
-      padding: '20px'
+      padding: '12px',
+      boxSizing: 'border-box'
     }}>
-      <Container size="xl" py="xl">
-        <Paper shadow="xl" p="xl" radius="xl" style={{
+      <Container size="xl" py={{ base: 'md', sm: 'xl' }} px={0}>
+        <Paper shadow="xl" p={{ base: 'md', sm: 'xl' }} radius="xl" style={{
           background: 'linear-gradient(135deg, rgba(212, 175, 55, 0.08) 0%, rgba(74, 55, 40, 0.03) 100%)',
           backdropFilter: 'blur(20px)',
           border: '1px solid rgba(212, 175, 55, 0.2)',
-          color: '#ffffff'
+          color: '#ffffff',
+          width: '100%',
+          boxSizing: 'border-box'
         }}>
         <form onSubmit={handleSubmit}>
-          <Stack gap="xl">
+          <Stack gap={{ base: 'md', sm: 'xl' }}>
             {/* Header */}
-            <Group>
+            <Group wrap="wrap" gap={{ base: 'sm', sm: 'md' }}>
               <ActionIcon
                 size="lg"
                 variant="light"
@@ -300,13 +304,13 @@ const InvoiceForm = ({ onSave, onCancel, invoice = null }) => {
               >
                 <IconArrowLeft size={20} />
               </ActionIcon>
-              <Group>
-                <Logo size={150} style={{ filter: 'drop-shadow(0 6px 12px rgba(0,0,0,0.2))' }} />
+              <Group wrap="wrap" gap={{ base: 'xs', sm: 'md' }}>
+                <Logo size={80} style={{ filter: 'drop-shadow(0 6px 12px rgba(0,0,0,0.2))' }} className="responsive-form-logo" />
                 <div>
-                  <Title order={2} style={{ color: '#d4af37' }}>
+                  <Title order={2} style={{ color: '#d4af37', fontSize: '20px' }} className="responsive-form-title">
                     {invoice ? 'Edit Invoice' : 'Create Invoice'}
                   </Title>
-                  <Text style={{ color: '#a1a1aa' }}>{COMPANY_INFO.name}</Text>
+                  <Text style={{ color: '#a1a1aa', fontSize: '14px' }}>{COMPANY_INFO.name}</Text>
                 </div>
               </Group>
             </Group>
@@ -369,6 +373,34 @@ const InvoiceForm = ({ onSave, onCancel, invoice = null }) => {
                     placeholder="06756556-1"
                     value={formData.permitNumber}
                     onChange={(e) => setFormData(prev => ({ ...prev, permitNumber: e.target.value }))}
+                    required
+                    styles={{
+                      label: { color: '#d4af37', fontWeight: 600 },
+                      input: {
+                        backgroundColor: 'rgba(74, 55, 40, 0.3)',
+                        border: '1px solid rgba(212, 175, 55, 0.3)',
+                        color: '#ffffff',
+                        '&:focus': {
+                          borderColor: '#d4af37'
+                        }
+                      }
+                    }}
+                  />
+                </Grid.Col>
+                
+                <Grid.Col span={{ base: 12, md: 6 }}>
+                  <Select
+                    label="Payment Method"
+                    placeholder="Select payment method"
+                    value={formData.paymentMethod}
+                    onChange={(value) => setFormData(prev => ({ ...prev, paymentMethod: value }))}
+                    data={[
+                      { value: 'Cash', label: 'Cash' },
+                      { value: 'Online', label: 'Online Payment' },
+                      { value: 'Check', label: 'Check' },
+                      { value: 'Bank Transfer', label: 'Bank Transfer' },
+                      { value: 'Credit Card', label: 'Credit Card' }
+                    ]}
                     required
                     styles={{
                       label: { color: '#d4af37', fontWeight: 600 },
@@ -748,6 +780,25 @@ const InvoiceForm = ({ onSave, onCancel, invoice = null }) => {
         </form>
         </Paper>
       </Container>
+      <style>{`
+        @media (max-width: 600px) {
+          .responsive-form-logo { width: 50px !important; height: 50px !important; }
+          .responsive-form-title { font-size: 16px !important; }
+          .mantine-Container-root { padding-left: 0 !important; padding-right: 0 !important; }
+          .mantine-Paper-root { margin: 8px !important; }
+          .mantine-TextInput-input, .mantine-NumberInput-input, .mantine-Select-input { 
+            font-size: 14px !important; 
+            padding: 8px !important; 
+          }
+          .mantine-Table-root { font-size: 12px !important; }
+          .mantine-Button-root { padding: 8px 12px !important; font-size: 14px !important; }
+          .mantine-ActionIcon-root { width: 32px !important; height: 32px !important; }
+        }
+        @media (max-width: 768px) {
+          .responsive-form-logo { width: 60px !important; height: 60px !important; }
+          .responsive-form-title { font-size: 18px !important; }
+        }
+      `}</style>
     </div>
   );
 };

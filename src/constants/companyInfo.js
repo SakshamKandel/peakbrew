@@ -1,7 +1,8 @@
 // Company information constants
 export const COMPANY_INFO = {
-  name: 'Peak Brew Trading',
+  name: 'Peak Brew Trading LLC',
   tagline: 'Premium Beer Distribution',
+  permitNumber: '06756556-1',
   address: {
     street: '7840 Tyler Blvd, Unit 6201',
     city: 'Mentor',

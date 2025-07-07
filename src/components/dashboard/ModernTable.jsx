@@ -100,29 +100,32 @@ const ModernTable = ({
       transition={{ duration: 0.5 }}
     >
       <Paper
-        p="xl"
+        p={{ base: 'md', sm: 'xl' }}
         radius="lg"
         style={{
           background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
           backdropFilter: 'blur(10px)',
           border: '1px solid rgba(255,255,255,0.1)',
           boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
+          width: '100%',
+          boxSizing: 'border-box',
         }}
+        className="modern-table-container"
       >
         {/* Header */}
-        <Stack gap="md">
-          <Group justify="space-between" align="center">
+        <Stack gap={{ base: 'sm', sm: 'md' }}>
+          <Group justify="space-between" align="center" wrap="wrap" gap={{ base: 'xs', sm: 'sm' }}>
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2 }}
             >
-              <Text size="xl" fw={700}>
+              <Text size={{ base: 'lg', sm: 'xl' }} fw={700} className="modern-table-title">
                 {title}
               </Text>
             </motion.div>
             
-            <Group gap="sm">
+            <Group gap="sm" wrap="wrap">
               {searchable && (
                 <motion.div
                   initial={{ opacity: 0, scale: 0.9 }}
@@ -134,7 +137,8 @@ const ModernTable = ({
                     leftSection={<IconSearch size={16} />}
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    style={{ minWidth: 250 }}
+                    style={{ minWidth: '200px', width: '100%' }}
+                    className="modern-table-search"
                   />
                 </motion.div>
               )}
@@ -342,6 +346,23 @@ const ModernTable = ({
           )}
         </Stack>
       </Paper>
+      <style>{`
+        @media (max-width: 600px) {
+          .modern-table-container { padding: 12px !important; }
+          .modern-table-title { font-size: 1.1rem !important; }
+          .modern-table-search { min-width: 150px !important; font-size: 14px !important; }
+          .mantine-Table-root { font-size: 11px !important; }
+          .mantine-Table-th, .mantine-Table-td { padding: 4px 6px !important; }
+          .mantine-ActionIcon-root { width: 28px !important; height: 28px !important; }
+          .mantine-Button-root { padding: 6px 10px !important; font-size: 12px !important; }
+        }
+        @media (max-width: 768px) {
+          .modern-table-container { padding: 16px !important; }
+          .modern-table-title { font-size: 1.3rem !important; }
+          .modern-table-search { min-width: 180px !important; }
+          .mantine-Table-th, .mantine-Table-td { padding: 6px 8px !important; }
+        }
+      `}</style>
     </motion.div>
   );
 };

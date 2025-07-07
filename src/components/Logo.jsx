@@ -6,7 +6,7 @@ export default function Logo({ size = 80, className = '', style = {}, forDashboa
   return (
     <img 
       src={logoSrc} 
-      alt="Peak Brew Trading Logo" 
+      alt="Peak Brew Trading LLC Logo" 
       width={size} 
       height={size}
       className={`peak-brew-logo ${className}`}

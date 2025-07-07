@@ -29,7 +29,7 @@ const StatCard = ({
       }}
     >
       <Paper
-        p="xl"
+        p={{ base: 'md', sm: 'xl' }}
         radius="lg"
         style={{
           background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%)',
@@ -37,10 +37,13 @@ const StatCard = ({
           border: '1px solid rgba(255,255,255,0.1)',
           boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
           cursor: 'pointer',
+          width: '100%',
+          boxSizing: 'border-box',
         }}
+        className="stat-card"
       >
-        <Group justify="space-between" align="flex-start">
-          <Stack gap="xs" style={{ flex: 1 }}>
+        <Group justify="space-between" align="flex-start" wrap="wrap" gap={{ base: 'xs', sm: 'md' }}>
+          <Stack gap="xs" style={{ flex: 1, minWidth: 0 }}>
             <Text size="sm" c="dimmed" fw={500} tt="uppercase" style={{ letterSpacing: '0.5px' }}>
               {title}
             </Text>
@@ -91,7 +94,7 @@ const StatCard = ({
             whileHover={{ rotate: 15, scale: 1.1 }}
           >
             <ThemeIcon
-              size="xl"
+              size={{ base: 'lg', sm: 'xl' }}
               radius="md"
               variant="gradient"
               gradient={{
@@ -99,12 +102,25 @@ const StatCard = ({
                 to: color === 'blue' ? '#764ba2' : color === 'green' ? '#38a169' : '#dd6b20',
                 deg: 135,
               }}
+              className="stat-card-icon"
             >
-              <Icon size={24} />
+              <Icon size={20} className="stat-card-icon-svg" />
             </ThemeIcon>
           </motion.div>
         </Group>
       </Paper>
+      <style>{`
+        @media (max-width: 600px) {
+          .stat-card { padding: 12px !important; }
+          .stat-card-icon { width: 40px !important; height: 40px !important; }
+          .stat-card-icon-svg { width: 16px !important; height: 16px !important; }
+          .mantine-Text-root { font-size: 12px !important; }
+        }
+        @media (max-width: 768px) {
+          .stat-card-icon { width: 45px !important; height: 45px !important; }
+          .stat-card-icon-svg { width: 18px !important; height: 18px !important; }
+        }
+      `}</style>
     </motion.div>
   );
 };

@@ -4,11 +4,112 @@
 @import '@mantine/core/styles.css';
 @import '@mantine/notifications/styles.css';
 
+/* Mobile First Responsive Design */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+}
+
 body {
   font-family: 'Inter', sans-serif;
   margin: 0;
   padding: 0;
   background-color: #f8f9fa;
+  overflow-x: hidden;
+}
+
+/* Mobile Responsive Utilities */
+@media (max-width: 600px) {
+  .mantine-Container-root {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+  }
+  
+  .mantine-Paper-root {
+    margin: 4px !important;
+    padding: 12px !important;
+  }
+  
+  .mantine-Title-root {
+    font-size: 1.2rem !important;
+  }
+  
+  .mantine-Text-root {
+    font-size: 0.9rem !important;
+  }
+  
+  .mantine-Button-root {
+    padding: 8px 12px !important;
+    font-size: 0.85rem !important;
+  }
+  
+  .mantine-TextInput-input,
+  .mantine-NumberInput-input,
+  .mantine-Select-input,
+  .mantine-Textarea-input {
+    font-size: 16px !important; /* Prevents zoom on iOS */
+    padding: 10px 12px !important;
+  }
+  
+  .mantine-Table-root {
+    font-size: 0.8rem !important;
+  }
+  
+  .mantine-Table-th,
+  .mantine-Table-td {
+    padding: 6px 8px !important;
+  }
+  
+  .mantine-Group-root {
+    gap: 8px !important;
+  }
+  
+  .mantine-Stack-root {
+    gap: 12px !important;
+  }
+  
+  .mantine-ActionIcon-root {
+    width: 32px !important;
+    height: 32px !important;
+  }
+  
+  .mantine-Badge-root {
+    font-size: 0.7rem !important;
+    padding: 4px 8px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .mantine-Container-root {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+  
+  .mantine-Paper-root {
+    padding: 16px !important;
+  }
+  
+  .mantine-Title-root {
+    font-size: 1.4rem !important;
+  }
+  
+  .mantine-Button-root {
+    padding: 10px 16px !important;
+    font-size: 0.9rem !important;
+  }
+}
+
+/* Touch-friendly interactive elements */
+@media (hover: none) and (pointer: coarse) {
+  .mantine-Button-root,
+  .mantine-ActionIcon-root {
+    min-height: 44px;
+    min-width: 44px;
+  }
 }
 
 /* Custom Peak Brew static branding - Beer/Liquor Theme */

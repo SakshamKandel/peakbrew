@@ -145,11 +145,11 @@ export default function InvoicePreview({ invoice, onClose, onEdit }) {
       const pdfDoc = await PDFDocument.create();
       
       // Set PDF metadata
-      pdfDoc.setTitle(`Peak Brew Trading - Invoice ${invoice.invoiceNumber}`);
-      pdfDoc.setAuthor('Peak Brew Trading');
+      pdfDoc.setTitle(`Peak Brew Trading LLC - Invoice ${invoice.invoiceNumber}`);
+      pdfDoc.setAuthor('Peak Brew Trading LLC');
       pdfDoc.setSubject(`Invoice #${invoice.invoiceNumber}`);
       pdfDoc.setCreator('Peak Brew Invoice Management System');
-      pdfDoc.setProducer('Peak Brew Trading');
+      pdfDoc.setProducer('Peak Brew Trading LLC');
       pdfDoc.setCreationDate(new Date());
       
       const page = pdfDoc.addPage([595.28, 841.89]); // A4 size
@@ -189,59 +189,67 @@ export default function InvoicePreview({ invoice, onClose, onEdit }) {
       if (logoImage) {
         page.drawImage(logoImage, {
           x: 50,
-          y: height - 100,
-          width: 60,
-          height: 60,
+          y: height - 85,
+          width: 45,
+          height: 45,
         });
       }
       
       // Company name
-      page.drawText('PEAK BREW TRADING', {
-        x: 125,
-        y: height - 65,
-        size: 24,
+      page.drawText('PEAK BREW TRADING LLC', {
+        x: 105,
+        y: height - 60,
+        size: 18,
         font: helveticaBoldFont,
         color: primaryBlue,
       });
       
       // Company subtitle
-      page.drawText('Premium Beer Distribution', {
-        x: 125,
-        y: height - 85,
-        size: 11,
+      page.drawText(COMPANY_INFO.tagline, {
+        x: 105,
+        y: height - 75,
+        size: 9,
         font: helveticaFont,
         color: lightText,
       });
       
       // Company contact info with proper spacing across multiple lines
-      page.drawText('7840 Tyler Blvd, Unit 6201', {
-        x: 125,
-        y: height - 95,
-        size: 9,
+      page.drawText(`Permit: ${COMPANY_INFO.permitNumber}`, {
+        x: 105,
+        y: height - 87,
+        size: 8,
         font: helveticaFont,
         color: lightText,
       });
       
-      page.drawText('Mentor, OH 44060, USA', {
-        x: 125,
+      page.drawText(COMPANY_INFO.address.street, {
+        x: 105,
+        y: height - 96,
+        size: 8,
+        font: helveticaFont,
+        color: lightText,
+      });
+      
+      page.drawText(`${COMPANY_INFO.address.city}, ${COMPANY_INFO.address.state} ${COMPANY_INFO.address.zipCode}, ${COMPANY_INFO.address.country}`, {
+        x: 105,
         y: height - 105,
-        size: 9,
+        size: 8,
         font: helveticaFont,
         color: lightText,
       });
       
-      page.drawText('Phone: +1 412-894-6129', {
-        x: 125,
-        y: height - 115,
-        size: 9,
+      page.drawText(`Phone: ${COMPANY_INFO.contact.phone}`, {
+        x: 105,
+        y: height - 114,
+        size: 8,
         font: helveticaFont,
         color: lightText,
       });
       
-      page.drawText('Email: peakbrewtrading@gmail.com', {
-        x: 125,
-        y: height - 125,
-        size: 9,
+      page.drawText(`Email: ${COMPANY_INFO.contact.email}`, {
+        x: 105,
+        y: height - 123,
+        size: 8,
         font: helveticaFont,
         color: lightText,
       });
@@ -249,16 +257,16 @@ export default function InvoicePreview({ invoice, onClose, onEdit }) {
       // Invoice title and number - right side
       page.drawText('INVOICE', {
         x: width - 150,
-        y: height - 65,
-        size: 28,
+        y: height - 60,
+        size: 22,
         font: helveticaBoldFont,
         color: primaryBlue,
       });
       
       page.drawText(`#${safeText(invoice.invoiceNumber)}`, {
         x: width - 150,
-        y: height - 90,
-        size: 12,
+        y: height - 80,
+        size: 11,
         font: helveticaBoldFont,
         color: darkText,
       });
@@ -271,22 +279,22 @@ export default function InvoicePreview({ invoice, onClose, onEdit }) {
       
       page.drawRectangle({
         x: width - 150,
-        y: height - 115,
+        y: height - 100,
         width: 80,
-        height: 20,
+        height: 18,
         color: statusColor,
-        borderRadius: 10,
+        borderRadius: 9,
       });
       
       page.drawText(statusText, {
         x: width - 140,
-        y: height - 108,
-        size: 10,
+        y: height - 93,
+        size: 9,
         font: helveticaBoldFont,
         color: white,
       });
       
-      currentY = height - 150;
+      currentY = height - 140;
       
       // === CLEAN INVOICE DETAILS SECTION ===
       
@@ -339,7 +347,7 @@ export default function InvoicePreview({ invoice, onClose, onEdit }) {
         color: darkText,
       });
       
-      page.drawText(`Permit: ${safeText(invoice.permitNumber || '06756556-1')}`, {
+      page.drawText(`Payment Method: ${safeText(invoice.paymentMethod || 'Cash')}`, {
         x: 60,
         y: currentY - 70,
         size: 10,
@@ -614,7 +622,7 @@ export default function InvoicePreview({ invoice, onClose, onEdit }) {
         
         currentY -= 12;
         
-        page.drawText('and this transaction is now complete. We appreciate your business with Peak Brew Trading.', {
+        page.drawText('and this transaction is now complete. We appreciate your business with Peak Brew Trading LLC.', {
           x: 50,
           y: currentY,
           size: 9,
@@ -704,7 +712,7 @@ export default function InvoicePreview({ invoice, onClose, onEdit }) {
       currentY -= 15;
       
       // Company footer info with generation timestamp
-      page.drawText(`${COMPANY_INFO.name} | Professional Invoice System`, {
+      page.drawText(`Peak Brew Trading LLC | Professional Invoice System`, {
         x: 50,
         y: currentY,
         size: 8,
@@ -829,15 +837,18 @@ export default function InvoicePreview({ invoice, onClose, onEdit }) {
     <div style={{
       minHeight: '100vh',
       background: 'linear-gradient(135deg, #4a3728 0%, #2d1f1a 50%, #1a1310 100%)',
-      padding: '20px'
+      padding: '20px',
+      boxSizing: 'border-box',
     }}>
-      <Container size="xl" py="xl">
+      <Container size="xl" py="xl" px={0} style={{ maxWidth: '100vw' }}>
         {/* Action Buttons - Hidden in PDF */}
-        <Paper p="md" mb="xl" className="skip-pdf" style={{
+        <Paper p={{ base: 'sm', sm: 'md' }} mb="xl" className="skip-pdf" style={{
           background: 'linear-gradient(135deg, rgba(212, 175, 55, 0.08) 0%, rgba(74, 55, 40, 0.03) 100%)',
           backdropFilter: 'blur(20px)',
           border: '1px solid rgba(212, 175, 55, 0.2)',
-          borderRadius: '12px'
+          borderRadius: '12px',
+          width: '100%',
+          boxSizing: 'border-box',
         }}>
           <Group justify="space-between" className="skip-pdf">
             <Button
@@ -901,7 +912,7 @@ export default function InvoicePreview({ invoice, onClose, onEdit }) {
         <Paper
           ref={invoiceRef}
           shadow="xl"
-          p={40}
+          p={{ base: 12, sm: 40 }}
           radius="xl"
           style={{ 
             background: 'linear-gradient(135deg, rgba(212, 175, 55, 0.08) 0%, rgba(74, 55, 40, 0.03) 100%)',
@@ -913,36 +924,38 @@ export default function InvoicePreview({ invoice, onClose, onEdit }) {
             fontSize: '14px',
             lineHeight: '1.5',
             fontFamily: 'Inter, Arial, sans-serif',
-            color: '#ffffff'
+            color: '#ffffff',
+            width: '100%',
+            boxSizing: 'border-box',
           }}
         >
-        <Stack gap="lg"> {/* Good spacing for readability */}
-          {/* Company Header with Logo - Enlarged and prominent */}
-          <Group justify="space-between" align="flex-start">
-            <Box>
-              <Group mb="md" gap="md">
-                <Logo size={160} style={{ filter: 'drop-shadow(0 6px 16px rgba(0,0,0,0.3))' }} /> {/* Much larger logo */}
+        <Stack gap={{ base: 'sm', sm: 'lg' }}>
+          {/* Company Header with Logo - More compact */}
+          <Group justify="space-between" align="flex-start" wrap="wrap" gap={{ base: 'sm', sm: 'xl' }}>
+            <Box style={{ minWidth: 0, flex: 1 }}>
+              <Group mb="sm" gap={{ base: 'xs', sm: 'sm' }} wrap="wrap">
+                <Logo size={60} style={{ filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.3))' }} className="responsive-logo" />
                 <Box>
-                  <Title order={2} style={{ color: '#d4af37', fontSize: '18px', fontWeight: 700 }}>
-                    {COMPANY_INFO.name}
+                  <Title order={2} style={{ color: '#d4af37', fontSize: '14px', fontWeight: 700 }} className="responsive-title">
+                    Peak Brew Trading LLC
                   </Title>
-                  <Text style={{ fontSize: '12px', fontWeight: 500, color: '#a1a1aa' }}>{COMPANY_INFO.tagline}</Text>
+                  <Text style={{ fontSize: '10px', fontWeight: 500, color: '#a1a1aa' }}>{COMPANY_INFO.tagline}</Text>
                 </Box>
               </Group>
-              <Text style={{ fontSize: '10px', lineHeight: 1.4, color: '#a1a1aa' }}>
-                <IconMapPin size={12} style={{ display: 'inline', marginRight: 4, color: '#d4af37' }} />
+              <Text style={{ fontSize: '8px', lineHeight: 1.3, color: '#a1a1aa' }}>
+                <IconMapPin size={10} style={{ display: 'inline', marginRight: 3, color: '#d4af37' }} />
                 {getFullAddress()}<br />
-                <IconMail size={12} style={{ display: 'inline', marginRight: 4, color: '#d4af37' }} />
+                Permit: {COMPANY_INFO.permitNumber}<br />
+                <IconMail size={10} style={{ display: 'inline', marginRight: 3, color: '#d4af37' }} />
                 {COMPANY_INFO.contact.email}<br />
-                <IconPhone size={12} style={{ display: 'inline', marginRight: 4, color: '#d4af37' }} />
+                <IconPhone size={10} style={{ display: 'inline', marginRight: 3, color: '#d4af37' }} />
                 {COMPANY_INFO.contact.phone}
               </Text>
             </Box>
-            
-            <Box ta="right">
-              <Title order={2} style={{ color: '#ffffff', fontSize: 'lg' }}>INVOICE</Title>
-              <Text size="md" fw={600} style={{ color: '#d4af37' }}>#{invoice.invoiceNumber}</Text>
-              <Badge color={getStatusColor(invoice.status)} size="md" mt="xs">
+            <Box ta="right" style={{ minWidth: 120 }}>
+              <Title order={2} style={{ color: '#ffffff', fontSize: '16px' }}>INVOICE</Title>
+              <Text size="sm" fw={600} style={{ color: '#d4af37' }}>#{invoice.invoiceNumber}</Text>
+              <Badge color={getStatusColor(invoice.status)} size="sm" mt="xs">
                 {(invoice.status || 'pending').toUpperCase()}
               </Badge>
             </Box>
@@ -964,9 +977,9 @@ export default function InvoicePreview({ invoice, onClose, onEdit }) {
                 
                 <Box>
                   <Text fw={600} style={{ color: '#d4af37' }} mb="xs" size="sm">
-                    Permit Number:
+                    Payment Method:
                   </Text>
-                  <Text size="sm" style={{ color: '#ffffff' }}>{invoice.permitNumber || '06756556-1'}</Text>
+                  <Text size="sm" style={{ color: '#ffffff' }}>{invoice.paymentMethod || 'Cash'}</Text>
                 </Box>
               </Stack>
             </Grid.Col>
@@ -1192,12 +1205,23 @@ export default function InvoicePreview({ invoice, onClose, onEdit }) {
               Thank you for your business! Please remit payment by the due date.
             </Text>
             <Text ta="center" size="xs" style={{ color: '#a1a1aa' }} mt="xs">
-              {COMPANY_INFO.name} | {getContactLine()}
+              Peak Brew Trading LLC | {getContactLine()}
             </Text>
           </Box>
         </Stack>
       </Paper>
     </Container>
+    <style>{`
+      @media (max-width: 600px) {
+        .responsive-logo { width: 40px !important; height: 40px !important; }
+        .responsive-title { font-size: 12px !important; }
+        .mantine-Container-root { padding-left: 0 !important; padding-right: 0 !important; }
+        .mantine-Paper-root { padding: 8px !important; }
+        .mantine-Group-root, .mantine-Stack-root { gap: 8px !important; }
+        .mantine-Table-root { font-size: 11px !important; }
+        .mantine-Title-root { font-size: 14px !important; }
+      }
+    `}</style>
     </div>
   );
 }

@@ -482,41 +482,43 @@ export default function Dashboard() {
       minHeight: '100vh', 
       background: 'linear-gradient(135deg, #4a3728 0%, #2d1f1a 50%, #1a1310 100%)',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
-      overflow: 'hidden'
+      overflow: 'hidden',
+      padding: '8px',
+      boxSizing: 'border-box'
     }}>
       <LoadingOverlay visible={loading} />
       
       {/* Compact Navigation Bar */}
       <div style={{
         position: 'fixed',
-        top: '20px',
-        left: '20px',
-        right: '20px',
+        top: '12px',
+        left: '12px',
+        right: '12px',
         zIndex: 1000,
         background: 'rgba(255, 255, 255, 0.05)',
         backdropFilter: 'blur(20px)',
         border: '1px solid rgba(255, 255, 255, 0.1)',
         borderRadius: '16px',
-        padding: '12px 20px',
+        padding: '8px 12px',
         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
-      }}>
-        <Flex justify="space-between" align="center">
-          <Group gap="lg">
-            <Logo size={50} />
+      }} className="responsive-nav">
+        <Flex justify="space-between" align="center" wrap="wrap" gap="sm">
+          <Group gap={{ base: 'xs', sm: 'lg' }}>
+            <Logo size={40} className="responsive-nav-logo" />
             <div>
               <Title order={3} style={{ 
                 color: '#ffffff', 
-                fontSize: '1.2rem', 
+                fontSize: '1rem', 
                 fontWeight: 700,
                 margin: 0,
                 background: 'linear-gradient(135deg, #d4af37 0%, #f4d03f 100%)',
                 backgroundClip: 'text',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent'
-              }}>
+              }} className="responsive-nav-title">
                 {COMPANY_INFO.name}
               </Title>
-              <Text size="xs" style={{ color: '#a1a1aa', margin: 0 }}>
+              <Text size="xs" style={{ color: '#a1a1aa', margin: 0, fontSize: '10px' }} className="responsive-nav-subtitle">
                 Analytics Dashboard
               </Text>
             </div>
@@ -557,7 +559,7 @@ export default function Dashboard() {
             </Tooltip>
 
             <Button
-              leftSection={<IconPlus size={16} />}
+              leftSection={<IconPlus size={14} />}
               onClick={() => setShowForm(true)}
               size="sm"
               style={{
@@ -569,12 +571,14 @@ export default function Dashboard() {
                 boxShadow: '0 4px 12px rgba(212, 175, 55, 0.3)',
                 transition: 'all 0.3s ease'
               }}
+              className="nav-btn-primary"
             >
-              New Invoice
+              <span className="btn-text-full">New Invoice</span>
+              <span className="btn-text-short">New</span>
             </Button>
 
             <Button
-              leftSection={<IconLogout size={16} />}
+              leftSection={<IconLogout size={14} />}
               onClick={handleLogout}
               size="sm"
               variant="light"
@@ -585,19 +589,21 @@ export default function Dashboard() {
                 borderRadius: '10px',
                 transition: 'all 0.3s ease'
               }}
+              className="nav-btn-logout"
             >
-              Logout
+              <span className="btn-text-full">Logout</span>
+              <span className="btn-text-short">Out</span>
             </Button>
           </Group>
         </Flex>
       </div>
 
       {/* Main Content with Top Margin */}
-      <div style={{ paddingTop: '90px' }}>
-        <Container size="xl" p="xl">
+      <div style={{ paddingTop: '90px' }} className="responsive-main-content">
+        <Container size="xl" p={{ base: 'md', sm: 'xl' }} px={{ base: 'sm', sm: 'xl' }}>
           {/* Real-time Stats Grid */}
           <div ref={statsRef}>
-            <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="xl" mb="xl">
+            <SimpleGrid cols={{ base: 1, xs: 2, sm: 2, lg: 4 }} spacing={{ base: 'md', sm: 'xl' }} mb={{ base: 'md', sm: 'xl' }}>
               {trail.map((style, index) => {
                 const card = statsCards[index];
                 const Icon = card.icon;
@@ -1349,6 +1355,60 @@ export default function Dashboard() {
           />
         )}
       </Modal>
+      <style>{`
+        .btn-text-short { display: none; }
+        .btn-text-full { display: inline; }
+        
+        @media (max-width: 600px) {
+          .responsive-nav { 
+            padding: 6px 8px !important;
+            position: fixed !important;
+            top: 8px !important;
+            left: 8px !important;
+            right: 8px !important;
+            min-height: 60px !important;
+          }
+          .responsive-nav-logo { width: 30px !important; height: 30px !important; }
+          .responsive-nav-title { font-size: 0.8rem !important; }
+          .responsive-nav-subtitle { font-size: 8px !important; }
+          .responsive-main-content { padding-top: 85px !important; }
+          .mantine-Container-root { padding-left: 8px !important; padding-right: 8px !important; }
+          .mantine-Card-root { padding: 12px !important; }
+          .mantine-ThemeIcon-root { width: 40px !important; height: 40px !important; }
+          .mantine-Button-root { padding: 6px 10px !important; font-size: 12px !important; }
+          .mantine-Table-root { font-size: 11px !important; }
+          .mantine-Text-root { font-size: 12px !important; }
+          .btn-text-short { display: inline !important; }
+          .btn-text-full { display: none !important; }
+        }
+        @media (max-width: 768px) {
+          .responsive-nav { 
+            min-height: 65px !important;
+            padding: 8px 10px !important;
+          }
+          .responsive-nav-logo { width: 35px !important; height: 35px !important; }
+          .responsive-nav-title { font-size: 0.9rem !important; }
+          .responsive-main-content { padding-top: 80px !important; }
+          .mantine-Card-root { padding: 16px !important; }
+          .mantine-ThemeIcon-root { width: 50px !important; height: 50px !important; }
+        }
+        @media (max-width: 480px) {
+          .responsive-nav { 
+            min-height: 75px !important;
+            padding: 6px !important;
+          }
+          .responsive-main-content { padding-top: 90px !important; }
+          .responsive-nav .mantine-Group-root {
+            gap: 4px !important;
+          }
+          .responsive-nav .mantine-Button-root {
+            padding: 4px 8px !important;
+            font-size: 11px !important;
+          }
+          .responsive-nav-title { display: none !important; }
+          .responsive-nav-subtitle { display: none !important; }
+        }
+      `}</style>
     </div>
   );
 }

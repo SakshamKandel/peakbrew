@@ -127,7 +127,10 @@ const ModernDashboardLayout = ({
         minHeight: '100vh',
         background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
         position: 'relative',
+        padding: '8px',
+        boxSizing: 'border-box'
       }}
+      className="modern-dashboard-container"
     >
       {/* Animated background elements */}
       <motion.div
@@ -135,13 +138,14 @@ const ModernDashboardLayout = ({
           position: 'fixed',
           top: '5%',
           right: '5%',
-          width: '300px',
-          height: '300px',
+          width: '200px',
+          height: '200px',
           borderRadius: '50%',
           background: 'rgba(255, 255, 255, 0.05)',
           filter: 'blur(60px)',
           zIndex: 0,
         }}
+        className="bg-element-1"
         animate={{
           scale: [1, 1.2, 1],
           opacity: [0.3, 0.1, 0.3],
@@ -158,13 +162,14 @@ const ModernDashboardLayout = ({
           position: 'fixed',
           bottom: '10%',
           left: '10%',
-          width: '200px',
-          height: '200px',
+          width: '150px',
+          height: '150px',
           borderRadius: '50%',
           background: 'rgba(232, 196, 72, 0.1)',
           filter: 'blur(40px)',
           zIndex: 0,
         }}
+        className="bg-element-2"
         animate={{
           scale: [1, 1.3, 1],
           opacity: [0.2, 0.4, 0.2],
@@ -177,36 +182,37 @@ const ModernDashboardLayout = ({
         }}
       />
 
-      <Container size="xl" py="xl" style={{ position: 'relative', zIndex: 1 }}>
+      <Container size="xl" py={{ base: 'md', sm: 'xl' }} px={{ base: 'sm', sm: 'xl' }} style={{ position: 'relative', zIndex: 1 }}>
         {/* Header */}
         <motion.div
           variants={headerVariants}
           initial="hidden"
           animate="visible"
         >
-          <Group justify="space-between" mb="xl" align="center">
-            <Group align="center">
+          <Group justify="space-between" mb={{ base: 'md', sm: 'xl' }} align="center" wrap="wrap" gap={{ base: 'sm', sm: 'md' }}>
+            <Group align="center" wrap="wrap" gap={{ base: 'xs', sm: 'md' }}>
               <motion.div
                 whileHover={{ scale: 1.05, rotate: 5 }}
                 transition={{ duration: 0.3 }}
               >
-                <Logo size={60} />
+                <Logo size={50} className="modern-dashboard-logo" />
               </motion.div>
               
               <Stack gap={0}>
                 <SplitText
                   style={{ 
-                    fontSize: '2rem', 
+                    fontSize: '1.5rem', 
                     fontWeight: 800, 
                     color: 'white',
                     margin: 0,
                   }}
+                  className="modern-dashboard-title"
                   variant="fadeInLeft"
                   staggerChildren={0.05}
                 >
-                  Peak Brew Trading
+                  Peak Brew Trading LLC
                 </SplitText>
-                <Text c="white" size="sm" style={{ opacity: 0.8 }}>
+                <Text c="white" size="sm" style={{ opacity: 0.8, fontSize: '12px' }} className="modern-dashboard-subtitle">
                   Dashboard Overview
                 </Text>
               </Stack>
@@ -466,6 +472,24 @@ const ModernDashboardLayout = ({
           </motion.div>
         ))}
       </AnimatePresence>
+      <style>{`
+        @media (max-width: 600px) {
+          .modern-dashboard-container { padding: 4px !important; }
+          .modern-dashboard-logo { width: 35px !important; height: 35px !important; }
+          .modern-dashboard-title { font-size: 1.1rem !important; }
+          .modern-dashboard-subtitle { font-size: 10px !important; }
+          .bg-element-1 { width: 120px !important; height: 120px !important; }
+          .bg-element-2 { width: 100px !important; height: 100px !important; }
+          .mantine-Container-root { padding-left: 4px !important; padding-right: 4px !important; }
+          .mantine-Button-root { padding: 6px 10px !important; font-size: 12px !important; }
+        }
+        @media (max-width: 768px) {
+          .modern-dashboard-logo { width: 40px !important; height: 40px !important; }
+          .modern-dashboard-title { font-size: 1.3rem !important; }
+          .bg-element-1 { width: 150px !important; height: 150px !important; }
+          .bg-element-2 { width: 120px !important; height: 120px !important; }
+        }
+      `}</style>
     </Box>
   );
 };

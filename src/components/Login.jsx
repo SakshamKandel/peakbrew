@@ -51,32 +51,36 @@ export default function Login() {
       alignItems: 'center',
       justifyContent: 'center',
       background: 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%)',
-      padding: '20px',
+      padding: '12px',
+      boxSizing: 'border-box',
     }}>
       <Container size={480} style={{ width: '100%', maxWidth: '480px' }}>
         <Paper 
           withBorder 
           shadow="xl" 
-          p={40} 
+          p={{ base: 20, sm: 40 }}
           radius="xl"
           style={{ 
             background: 'linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%)',
             border: '1px solid rgba(232, 200, 72, 0.2)',
             boxShadow: '0 20px 40px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(232, 200, 72, 0.1)',
+            width: '100%',
+            boxSizing: 'border-box',
           }}
         >
-          <Stack align="center" mb="xl" spacing="lg">
-            <Logo size={100} />
+          <Stack align="center" mb={{ base: 'md', sm: 'xl' }} spacing={{ base: 'sm', sm: 'lg' }}>
+            <Logo size={80} className="login-logo" />
             <div style={{ textAlign: 'center' }}>
               <Title 
                 order={1} 
                 style={{ 
                   color: COMPANY_INFO.colors.primary,
-                  fontSize: '28px',
+                  fontSize: '22px',
                   fontWeight: 700,
                   marginBottom: '8px',
                   textShadow: '0 1px 2px rgba(0, 0, 0, 0.1)',
                 }}
+                className="login-title"
               >
                 {COMPANY_INFO.name}
               </Title>
@@ -85,9 +89,10 @@ export default function Login() {
                 size="md"
                 style={{ 
                   color: '#6c757d',
-                  fontSize: '16px',
+                  fontSize: '14px',
                   fontWeight: 500,
                 }}
+                className="login-subtitle"
               >
                 Premium Beer Distribution Portal
               </Text>
@@ -182,6 +187,24 @@ export default function Login() {
 
         </Paper>
       </Container>
+      <style>{`
+        @media (max-width: 600px) {
+          .login-logo { width: 60px !important; height: 60px !important; }
+          .login-title { font-size: 18px !important; }
+          .login-subtitle { font-size: 12px !important; }
+          .mantine-Container-root { padding-left: 8px !important; padding-right: 8px !important; }
+          .mantine-TextInput-input, .mantine-PasswordInput-input { 
+            font-size: 14px !important; 
+            padding: 8px 12px !important; 
+          }
+          .mantine-Button-root { padding: 10px 16px !important; font-size: 14px !important; }
+        }
+        @media (max-width: 768px) {
+          .login-logo { width: 70px !important; height: 70px !important; }
+          .login-title { font-size: 20px !important; }
+          .login-subtitle { font-size: 13px !important; }
+        }
+      `}</style>
     </div>
   );
 }
