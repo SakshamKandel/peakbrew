@@ -2,6 +2,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import ModernLogin from './components/auth/ModernLogin';
 import Dashboard from './components/Dashboard';
+import CustomerManagement from './components/CustomerManagement';
+import Calculator from './components/Calculator';
 import { AppShell } from '@mantine/core';
 import './App.css';
 
@@ -29,6 +31,16 @@ function App() {
             <Route path="/dashboard" element={
               <ProtectedRoute>
                 <Dashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/customers" element={
+              <ProtectedRoute>
+                <CustomerManagement />
+              </ProtectedRoute>
+            } />
+            <Route path="/calculator" element={
+              <ProtectedRoute>
+                <Calculator />
               </ProtectedRoute>
             } />
             <Route path="/" element={<Navigate to="/dashboard" />} />

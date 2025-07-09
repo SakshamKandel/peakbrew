@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Container,
   Card,
@@ -27,7 +28,6 @@ import {
   Drawer,
   Tabs,
   Switch,
-  Notification,
 } from '@mantine/core';
 import {
   IconPlus,
@@ -41,7 +41,6 @@ import {
   IconTrendingUp,
   IconCalendar,
   IconSearch,
-  IconBell,
   IconSettings,
   IconUser,
   IconAnalyze,
@@ -55,6 +54,7 @@ import {
   IconFileInvoice,
   IconReportAnalytics,
   IconUserCircle,
+  IconUsers,
   IconMoon,
   IconSun,
   IconX,
@@ -64,8 +64,8 @@ import {
   IconArrowDownRight,
   IconDots,
   IconRefresh,
+  IconCalculator,
 } from '@tabler/icons-react';
-import { notifications } from '@mantine/notifications';
 import { useAuth } from '../contexts/AuthContext';
 import { 
   collection, 
@@ -79,8 +79,10 @@ import {
   where
 } from 'firebase/firestore';
 import { db, storage } from '../firebase';
+import customerService from '../services/customerService';
 import InvoiceForm from './InvoiceForm';
 import InvoicePreview from './InvoicePreview';
+import CustomerManagement from './CustomerManagement';
 import Logo from './Logo';
 import { COMPANY_INFO } from '../constants/companyInfo';
 import { format, startOfMonth, endOfMonth, subMonths, isAfter, isBefore } from 'date-fns';
@@ -115,11 +117,11 @@ export default function Dashboard() {
   const [filterStatus, setFilterStatus] = useState('all');
   const [sortBy, setSortBy] = useState('date');
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const { logout, currentUser } = useAuth();
+  const navigate = useNavigate();
 
   // Animation refs
   const { ref: statsRef, inView: statsInView } = useInView({ threshold: 0.1, triggerOnce: true });
@@ -198,11 +200,7 @@ export default function Dashboard() {
       setInvoices(invoiceList);
     } catch (error) {
       console.error('Error fetching invoices:', error);
-      notifications.show({
-        title: 'Error',
-        message: 'Failed to fetch invoices.',
-        color: 'red',
-      });
+      console.error('Failed to fetch invoices.');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -215,11 +213,7 @@ export default function Dashboard() {
 
   const handleCreateInvoice = async (invoiceData) => {
     if (!currentUser) {
-      return notifications.show({
-        title: 'Error',
-        message: 'You must be logged in to create an invoice.',
-        color: 'red',
-      });
+      return console.error('You must be logged in to create an invoice.');
     }
     try {
       const newInvoice = await addDoc(collection(db, 'invoices'), {
@@ -229,10 +223,6 @@ export default function Dashboard() {
         updatedAt: new Date()
       });
       
-      await fetchInvoices();
-      setShowForm(false);
-      setEditingInvoice(null);
-      
       const createdInvoice = {
         id: newInvoice.id,
         ...invoiceData,
@@ -240,38 +230,44 @@ export default function Dashboard() {
         createdAt: new Date(),
         updatedAt: new Date()
       };
+
+      // Update customer statistics if customerName is provided
+      if (invoiceData.customerName) {
+        try {
+          // Find customer by name
+          const customersResult = await customerService.getCustomers(currentUser.uid);
+          const customer = customersResult.customers.find(c => 
+            c.name.toLowerCase() === invoiceData.customerName.toLowerCase()
+          );
+          
+          if (customer) {
+            await customerService.updateCustomerStats(customer.id, createdInvoice, 'add');
+          }
+        } catch (customerError) {
+          console.error('Error updating customer stats:', customerError);
+        }
+      }
+      
+      await fetchInvoices();
+      setShowForm(false);
+      setEditingInvoice(null);
+      
       setPreviewInvoice(createdInvoice);
       
-      notifications.show({
-        title: 'Success',
-        message: 'Invoice created successfully!',
-        color: 'green',
-      });
+      console.log('Invoice created successfully!');
     } catch (error) {
       console.error('Error creating invoice:', error);
-      notifications.show({
-        title: 'Error',
-        message: 'Failed to create invoice.',
-        color: 'red',
-      });
+      console.error('Failed to create invoice.');
     }
   };
 
   const handleUpdateInvoice = async (invoiceData) => {
     if (!currentUser) {
-      return notifications.show({
-        title: 'Error',
-        message: 'You must be logged in to update an invoice.',
-        color: 'red',
-      });
+      return console.error('You must be logged in to update an invoice.');
     }
     
     if (!editingInvoice || !editingInvoice.id) {
-      return notifications.show({
-        title: 'Error',
-        message: 'No invoice selected for editing.',
-        color: 'red',
-      });
+      return console.error('No invoice selected for editing.');
     }
     
     try {
@@ -286,23 +282,47 @@ export default function Dashboard() {
         pdfURL: null // Clear PDF URL to force regeneration
       });
       
+      // Update customer statistics if customer has changed or invoice amount changed
+      if (invoiceData.customerName || editingInvoice.customerName) {
+        try {
+          const customersResult = await customerService.getCustomers(currentUser.uid);
+          
+          // Remove from old customer if customer name changed
+          if (editingInvoice.customerName && editingInvoice.customerName !== invoiceData.customerName) {
+            const oldCustomer = customersResult.customers.find(c => 
+              c.name.toLowerCase() === editingInvoice.customerName.toLowerCase()
+            );
+            if (oldCustomer) {
+              await customerService.updateCustomerStats(oldCustomer.id, editingInvoice, 'remove');
+            }
+          }
+          
+          // Add to new customer
+          if (invoiceData.customerName) {
+            const newCustomer = customersResult.customers.find(c => 
+              c.name.toLowerCase() === invoiceData.customerName.toLowerCase()
+            );
+            if (newCustomer) {
+              await customerService.updateCustomerStats(newCustomer.id, {
+                ...invoiceData,
+                id: editingInvoice.id
+              }, 'add');
+            }
+          }
+        } catch (customerError) {
+          console.error('Error updating customer stats:', customerError);
+        }
+      }
+      
       console.log('Invoice updated successfully in database');
       
       await fetchInvoices();
       setShowForm(false);
       setEditingInvoice(null);
-      notifications.show({
-        title: 'Success',
-        message: 'Invoice updated successfully!',
-        color: 'green',
-      });
+      console.log('Invoice updated successfully!');
     } catch (error) {
       console.error('Error updating invoice:', error);
-      notifications.show({
-        title: 'Error',
-        message: 'Failed to update invoice. Please try again.',
-        color: 'red',
-      });
+      console.error('Failed to update invoice. Please try again.');
     }
   };
 
@@ -325,18 +345,10 @@ export default function Dashboard() {
         
         await fetchInvoices();
         
-        notifications.show({
-          title: 'Success',
-          message: 'Invoice deleted successfully!',
-          color: 'green',
-        });
+        console.log('Invoice deleted successfully!');
       } catch (error) {
         console.error('Error deleting invoice:', error);
-        notifications.show({
-          title: 'Error',
-          message: 'Failed to delete invoice.',
-          color: 'red',
-        });
+        console.error('Failed to delete invoice.');
       }
     }
   };
@@ -350,18 +362,10 @@ export default function Dashboard() {
   const handleLogout = async () => {
     try {
       await logout();
-      notifications.show({
-        title: 'Success',
-        message: 'Logged out successfully!',
-        color: 'green',
-      });
+      console.log('Logged out successfully!');
     } catch (error) {
       console.error('Error logging out:', error);
-      notifications.show({
-        title: 'Error',
-        message: 'Failed to log out.',
-        color: 'red',
-      });
+      console.error('Failed to log out.');
     }
   };
 
@@ -502,6 +506,7 @@ export default function Dashboard() {
     config: { tension: 300, friction: 30 }
   });
 
+
   if (showForm) {
     return (
       <InvoiceForm
@@ -537,7 +542,19 @@ export default function Dashboard() {
       padding: '8px',
       boxSizing: 'border-box'
     }}>
-      <LoadingOverlay visible={loading} />
+      <LoadingOverlay 
+        visible={loading} 
+        overlayProps={{ 
+          color: 'rgba(0, 0, 0, 0.8)', 
+          backgroundOpacity: 0.8,
+          blur: 2
+        }}
+        loaderProps={{ 
+          color: '#d4af37',
+          size: 'lg',
+          type: 'dots'
+        }}
+      />
       
       {/* Compact Navigation Bar */}
       <div style={{
@@ -593,21 +610,43 @@ export default function Dashboard() {
               </ActionIcon>
             </Tooltip>
 
-            <Tooltip label="Notifications">
-              <ActionIcon
-                size={36}
-                onClick={() => setNotificationsOpen(true)}
-                style={{
-                  background: 'rgba(212, 175, 55, 0.1)',
-                  color: '#d4af37',
-                  border: '1px solid rgba(212, 175, 55, 0.2)',
-                  borderRadius: '10px',
-                  transition: 'all 0.3s ease'
-                }}
-              >
-                <IconBell size={16} />
-              </ActionIcon>
-            </Tooltip>
+
+
+            <Button
+              leftSection={<IconUsers size={14} />}
+              onClick={() => navigate('/customers')}
+              size="sm"
+              variant="light"
+              style={{
+                background: 'rgba(99, 102, 241, 0.1)',
+                color: '#6366f1',
+                border: '1px solid rgba(99, 102, 241, 0.2)',
+                borderRadius: '10px',
+                transition: 'all 0.3s ease'
+              }}
+              className="nav-btn-customers"
+            >
+              <span className="btn-text-full">Customers</span>
+              <span className="btn-text-short">CRM</span>
+            </Button>
+
+            <Button
+              leftSection={<IconCalculator size={14} />}
+              onClick={() => navigate('/calculator')}
+              size="sm"
+              variant="light"
+              style={{
+                background: 'rgba(34, 197, 94, 0.1)',
+                color: '#22c55e',
+                border: '1px solid rgba(34, 197, 94, 0.2)',
+                borderRadius: '10px',
+                transition: 'all 0.3s ease'
+              }}
+              className="nav-btn-calculator"
+            >
+              <span className="btn-text-full">Calculator</span>
+              <span className="btn-text-short">Calc</span>
+            </Button>
 
             <Button
               leftSection={<IconPlus size={14} />}
@@ -1219,65 +1258,6 @@ export default function Dashboard() {
         </Container>
       </div>
 
-      {/* Notifications Drawer */}
-      <Drawer
-        opened={notificationsOpen}
-        onClose={() => setNotificationsOpen(false)}
-        title="Notifications"
-        position="right"
-        size="md"
-        styles={{
-          drawer: {
-            backgroundColor: 'rgba(31, 41, 55, 0.95)',
-            backdropFilter: 'blur(20px)',
-            border: '1px solid rgba(255, 255, 255, 0.1)'
-          },
-          header: {
-            backgroundColor: 'transparent',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
-          },
-          title: {
-            color: '#ffffff',
-            fontWeight: 600
-          }
-        }}
-      >
-        <Stack gap="md">
-          <Notification
-            icon={<IconCheck size={20} />}
-            color="green"
-            title="Invoice Paid"
-            onClose={() => {}}
-            styles={{
-              root: {
-                backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                border: '1px solid rgba(16, 185, 129, 0.2)'
-              },
-              title: { color: '#ffffff' },
-              description: { color: '#d1d5db' }
-            }}
-          >
-            Invoice #INV-001 has been marked as paid
-          </Notification>
-          
-          <Notification
-            icon={<IconExclamationCircle size={20} />}
-            color="yellow"
-            title="Payment Overdue"
-            onClose={() => {}}
-            styles={{
-              root: {
-                backgroundColor: 'rgba(245, 158, 11, 0.1)',
-                border: '1px solid rgba(245, 158, 11, 0.2)'
-              },
-              title: { color: '#ffffff' },
-              description: { color: '#d1d5db' }
-            }}
-          >
-            Invoice #INV-002 is 30 days overdue
-          </Notification>
-        </Stack>
-      </Drawer>
 
       {/* Settings Drawer */}
       <Drawer
@@ -1427,6 +1407,50 @@ export default function Dashboard() {
         .btn-text-short { display: none; }
         .btn-text-full { display: inline; }
         
+        /* Mobile First Approach */
+        @media (max-width: 480px) {
+          .responsive-nav { 
+            min-height: 75px !important;
+            padding: 6px !important;
+            flex-wrap: wrap !important;
+          }
+          .responsive-nav-logo { width: 25px !important; height: 25px !important; }
+          .responsive-nav-title { display: none !important; }
+          .responsive-nav-subtitle { display: none !important; }
+          .responsive-main-content { padding-top: 90px !important; }
+          .mantine-Container-root { padding-left: 8px !important; padding-right: 8px !important; }
+          .mantine-Card-root { padding: 12px !important; margin-bottom: 16px !important; }
+          .mantine-ThemeIcon-root { width: 35px !important; height: 35px !important; }
+          .mantine-Button-root { padding: 4px 8px !important; font-size: 11px !important; }
+          .mantine-Table-root { font-size: 11px !important; }
+          .mantine-Text-root { font-size: 12px !important; }
+          .mantine-Title-root { font-size: 18px !important; }
+          .btn-text-short { display: inline !important; }
+          .btn-text-full { display: none !important; }
+          .nav-btn-analytics { order: 1 !important; }
+          .nav-btn-customers { order: 2 !important; }
+          .nav-btn-primary { order: 3 !important; }
+          .nav-btn-logout { order: 4 !important; }
+          .responsive-nav .mantine-Group-root {
+            gap: 4px !important;
+          }
+          .mantine-SimpleGrid-root { 
+            grid-template-columns: 1fr !important;
+            gap: 12px !important;
+          }
+          .mantine-ScrollArea-root { max-height: 300px !important; }
+          .mantine-Stack-root { gap: 12px !important; }
+          .mantine-Group-root { gap: 8px !important; }
+          .mantine-ActionIcon-root { width: 28px !important; height: 28px !important; }
+          .mantine-Badge-root { font-size: 10px !important; }
+          .mantine-Progress-root { height: 4px !important; }
+          .mantine-Flex-root { flex-wrap: wrap !important; gap: 8px !important; }
+          .mantine-Tabs-tab { padding: 8px 12px !important; font-size: 12px !important; }
+          .mantine-Modal-modal { margin: 8px !important; }
+          .mantine-Paper-root { border-radius: 12px !important; }
+          .mantine-Tooltip-tooltip { font-size: 10px !important; }
+        }
+        
         @media (max-width: 600px) {
           .responsive-nav { 
             padding: 6px 8px !important;
@@ -1448,7 +1472,19 @@ export default function Dashboard() {
           .mantine-Text-root { font-size: 12px !important; }
           .btn-text-short { display: inline !important; }
           .btn-text-full { display: none !important; }
+          .mantine-SimpleGrid-root { 
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 16px !important;
+          }
+          .mantine-ScrollArea-root { max-height: 400px !important; }
+          .mantine-Drawer-content { padding: 16px !important; }
+          .mantine-Modal-body { padding: 16px !important; }
+          .mantine-NumberInput-root { font-size: 14px !important; }
+          .mantine-Select-root { font-size: 14px !important; }
+          .mantine-TextInput-root { font-size: 14px !important; }
+          .mantine-Textarea-root { font-size: 14px !important; }
         }
+        
         @media (max-width: 768px) {
           .responsive-nav { 
             min-height: 65px !important;
@@ -1459,22 +1495,168 @@ export default function Dashboard() {
           .responsive-main-content { padding-top: 80px !important; }
           .mantine-Card-root { padding: 16px !important; }
           .mantine-ThemeIcon-root { width: 50px !important; height: 50px !important; }
+          .mantine-SimpleGrid-root { 
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 20px !important;
+          }
+          .mantine-Table-root { font-size: 12px !important; }
+          .mantine-Button-root { padding: 8px 12px !important; font-size: 13px !important; }
+          .mantine-Title-root { font-size: 20px !important; }
+          .mantine-Text-root { font-size: 13px !important; }
+          .mantine-Badge-root { font-size: 11px !important; }
+          .mantine-ActionIcon-root { width: 32px !important; height: 32px !important; }
+          .mantine-Avatar-root { width: 40px !important; height: 40px !important; }
+          .mantine-Progress-root { height: 6px !important; }
+          .mantine-Tabs-tab { padding: 12px 16px !important; font-size: 14px !important; }
+          .mantine-Modal-modal { margin: 16px !important; }
+          .mantine-Drawer-content { padding: 20px !important; }
         }
-        @media (max-width: 480px) {
-          .responsive-nav { 
-            min-height: 75px !important;
-            padding: 6px !important;
+        
+        @media (max-width: 992px) {
+          .mantine-SimpleGrid-root { 
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 24px !important;
           }
-          .responsive-main-content { padding-top: 90px !important; }
-          .responsive-nav .mantine-Group-root {
-            gap: 4px !important;
+          .mantine-Container-root { padding-left: 16px !important; padding-right: 16px !important; }
+          .mantine-Card-root { padding: 20px !important; }
+          .mantine-Table-root { font-size: 13px !important; }
+          .mantine-Button-root { padding: 10px 16px !important; font-size: 14px !important; }
+          .mantine-Title-root { font-size: 22px !important; }
+          .mantine-Text-root { font-size: 14px !important; }
+          .mantine-ScrollArea-root { max-height: 500px !important; }
+          .mantine-Drawer-content { padding: 24px !important; }
+          .mantine-Modal-body { padding: 24px !important; }
+        }
+        
+        @media (max-width: 1200px) {
+          .mantine-SimpleGrid-root { 
+            grid-template-columns: repeat(3, 1fr) !important;
+            gap: 28px !important;
           }
-          .responsive-nav .mantine-Button-root {
-            padding: 4px 8px !important;
-            font-size: 11px !important;
+          .mantine-Container-root { padding-left: 20px !important; padding-right: 20px !important; }
+          .mantine-Card-root { padding: 24px !important; }
+          .mantine-Table-root { font-size: 14px !important; }
+          .mantine-Button-root { padding: 12px 20px !important; font-size: 15px !important; }
+          .mantine-Title-root { font-size: 24px !important; }
+          .mantine-Text-root { font-size: 15px !important; }
+          .mantine-ScrollArea-root { max-height: 600px !important; }
+        }
+        
+        /* Touch-friendly interactions */
+        @media (pointer: coarse) {
+          .mantine-Button-root { 
+            min-height: 44px !important;
+            padding: 12px 16px !important;
+            touch-action: manipulation !important;
           }
-          .responsive-nav-title { display: none !important; }
-          .responsive-nav-subtitle { display: none !important; }
+          .mantine-ActionIcon-root { 
+            min-width: 44px !important;
+            min-height: 44px !important;
+            touch-action: manipulation !important;
+          }
+          .mantine-UnstyledButton-root { 
+            min-height: 44px !important;
+            touch-action: manipulation !important;
+          }
+          .mantine-Tabs-tab { 
+            min-height: 44px !important;
+            touch-action: manipulation !important;
+          }
+          .mantine-Select-input { 
+            min-height: 44px !important;
+            touch-action: manipulation !important;
+          }
+          .mantine-TextInput-input { 
+            min-height: 44px !important;
+            touch-action: manipulation !important;
+          }
+          .mantine-NumberInput-input { 
+            min-height: 44px !important;
+            touch-action: manipulation !important;
+          }
+          .mantine-Table-tr { 
+            min-height: 44px !important;
+          }
+          .mantine-Table-td { 
+            padding: 12px 8px !important;
+          }
+          .mantine-Table-th { 
+            padding: 12px 8px !important;
+          }
+        }
+        
+        /* Dark mode optimizations */
+        @media (prefers-color-scheme: dark) {
+          .mantine-Card-root { 
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+          }
+          .mantine-Paper-root { 
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+          }
+          .mantine-Text-root { 
+            color: #ffffff !important;
+          }
+          .mantine-Title-root { 
+            color: #d4af37 !important;
+          }
+        }
+        
+        /* Accessibility improvements */
+        @media (prefers-reduced-motion: reduce) {
+          * {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+          }
+        }
+        
+        /* High contrast mode */
+        @media (prefers-contrast: high) {
+          .mantine-Card-root { 
+            border: 2px solid #ffffff !important;
+          }
+          .mantine-Button-root { 
+            border: 2px solid currentColor !important;
+          }
+          .mantine-ActionIcon-root { 
+            border: 2px solid currentColor !important;
+          }
+          .mantine-Text-root { 
+            color: #ffffff !important;
+          }
+          .mantine-Title-root { 
+            color: #ffffff !important;
+          }
+        }
+        
+        /* Print styles */
+        @media print {
+          .responsive-nav { display: none !important; }
+          .mantine-ActionIcon-root { display: none !important; }
+          .mantine-Button-root { display: none !important; }
+          .mantine-Card-root { 
+            background: #ffffff !important;
+            border: 1px solid #000000 !important;
+            box-shadow: none !important;
+          }
+          .mantine-Text-root { 
+            color: #000000 !important;
+          }
+          .mantine-Title-root { 
+            color: #000000 !important;
+          }
+          .mantine-Table-root { 
+            border: 1px solid #000000 !important;
+          }
+          .mantine-Table-th { 
+            background: #f5f5f5 !important;
+            border: 1px solid #000000 !important;
+          }
+          .mantine-Table-td { 
+            border: 1px solid #000000 !important;
+          }
         }
       `}</style>
     </div>

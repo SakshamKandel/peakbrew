@@ -18,6 +18,7 @@ import {
   Badge,
   Box,
   Loader,
+  Autocomplete,
 } from '@mantine/core';
 import { 
   IconArrowLeft,
@@ -43,6 +44,7 @@ import {
   orderBy
 } from 'firebase/firestore';
 import { db } from '../firebase';
+import customerService from '../services/customerService';
 import { notifications } from '@mantine/notifications';
 import Logo from './Logo';
 import { COMPANY_INFO } from '../constants/companyInfo';
@@ -72,29 +74,18 @@ const InvoiceForm = ({ onSave, onCancel, invoice = null }) => {
     status: 'pending'
   });
 
-  // Customer autocomplete state - temporarily disabled
-  // const [customers, setCustomers] = useState([]);
-  // const [customerLoading, setCustomerLoading] = useState(false);
-  // const [customerSearchValue, setCustomerSearchValue] = useState('');
+  const [customers, setCustomers] = useState([]);
+  const [customerLoading, setCustomerLoading] = useState(false);
+  const [customerSearchValue, setCustomerSearchValue] = useState('');
 
-  // Fetch existing customers - temporarily disabled
-  /*
+  // Fetch existing customers
   const fetchCustomers = async () => {
     if (!currentUser) return;
     
     setCustomerLoading(true);
     try {
-      const q = query(
-        collection(db, 'customers'),
-        where("userId", "==", currentUser.uid),
-        orderBy('name', 'asc')
-      );
-      const querySnapshot = await getDocs(q);
-      const customerList = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      setCustomers(customerList);
+      const result = await customerService.getCustomers(currentUser.uid);
+      setCustomers(result.customers);
     } catch (error) {
       console.error('Error fetching customers:', error);
     } finally {
@@ -102,7 +93,7 @@ const InvoiceForm = ({ onSave, onCancel, invoice = null }) => {
     }
   };
 
-  // Save customer to Firestore
+  // Save customer to database
   const saveCustomer = async (customerData) => {
     if (!currentUser) return;
 
@@ -112,12 +103,7 @@ const InvoiceForm = ({ onSave, onCancel, invoice = null }) => {
       );
       
       if (!existingCustomer) {
-        await addDoc(collection(db, 'customers'), {
-          ...customerData,
-          userId: currentUser.uid,
-          createdAt: new Date(),
-          updatedAt: new Date()
-        });
+        await customerService.createCustomer(customerData, currentUser.uid);
         await fetchCustomers(); // Refresh customer list
       }
     } catch (error) {
@@ -149,7 +135,7 @@ const InvoiceForm = ({ onSave, onCancel, invoice = null }) => {
     }
     setCustomerSearchValue(customerName);
   };
-  */
+
 
   // Helper function to safely parse dates
   const parseDate = (dateValue) => {
@@ -176,10 +162,9 @@ const InvoiceForm = ({ onSave, onCancel, invoice = null }) => {
   };
 
   useEffect(() => {
-    // Temporarily disabled customer fetching
-    // if (currentUser) {
-    //   fetchCustomers();
-    // }
+    if (currentUser) {
+      fetchCustomers();
+    }
     
     if (invoice) {
       console.log('Loading invoice for editing:', invoice);
@@ -189,7 +174,7 @@ const InvoiceForm = ({ onSave, onCancel, invoice = null }) => {
       };
       console.log('Form data set to:', formDataToLoad);
       setFormData(formDataToLoad);
-      // setCustomerSearchValue(invoice.customerName || '');
+      setCustomerSearchValue(invoice.customerName || '');
     } else {
       console.log('Creating new invoice');
       const invoiceNum = `INV-${Date.now()}`;
@@ -257,15 +242,15 @@ const InvoiceForm = ({ onSave, onCancel, invoice = null }) => {
     const subtotal = formData.items.reduce((sum, item) => sum + item.total, 0);
     const total = subtotal;
 
-    // Save customer data if it's new - temporarily disabled
-    // if (formData.customerName && formData.customerEmail) {
-    //   await saveCustomer({
-    //     name: formData.customerName,
-    //     email: formData.customerEmail,
-    //     phone: formData.customerPhone,
-    //     address: formData.customerAddress
-    //   });
-    // }
+    // Save customer data if it's new
+    if (formData.customerName && formData.customerEmail) {
+      await saveCustomer({
+        name: formData.customerName,
+        email: formData.customerEmail,
+        phone: formData.customerPhone,
+        address: formData.customerAddress
+      });
+    }
 
     // Ensure we have a valid date
     const validDate = parseDate(formData.date);
@@ -437,15 +422,19 @@ const InvoiceForm = ({ onSave, onCancel, invoice = null }) => {
               
               <Grid>
                 <Grid.Col span={{ base: 12, md: 6 }}>
-                  <TextInput
+                  <Autocomplete
                     label="Customer Name"
-                    placeholder="Enter customer name"
-                    value={formData.customerName || ''}
-                    onChange={(event) => {
-                      const value = event.currentTarget.value;
-                      setFormData(prev => ({ ...prev, customerName: value }));
-                    }}
-                    leftSection={<IconUser size={16} />}
+                    placeholder="Enter or select customer name"
+                    value={customerSearchValue}
+                    onChange={handleCustomerSelect}
+                    data={customers.map(customer => ({
+                      value: customer.name,
+                      label: customer.name
+                    }))}
+                    leftSection={customerLoading ? <Loader size={16} /> : <IconUser size={16} />}
+                    rightSection={customers.length > 0 ? <IconSearch size={16} /> : null}
+                    limit={10}
+                    nothingFoundMessage="No customers found. Type to create new customer."
                     required
                     styles={{
                       label: { color: '#d4af37', fontWeight: 600 },
@@ -455,6 +444,20 @@ const InvoiceForm = ({ onSave, onCancel, invoice = null }) => {
                         color: '#ffffff',
                         '&:focus': {
                           borderColor: '#d4af37'
+                        }
+                      },
+                      dropdown: {
+                        backgroundColor: 'rgba(74, 55, 40, 0.95)',
+                        border: '1px solid rgba(212, 175, 55, 0.2)',
+                        color: '#ffffff'
+                      },
+                      option: {
+                        color: '#ffffff',
+                        '&[data-selected="true"]': {
+                          backgroundColor: 'rgba(212, 175, 55, 0.3)'
+                        },
+                        '&:hover': {
+                          backgroundColor: 'rgba(212, 175, 55, 0.2)'
                         }
                       }
                     }}
