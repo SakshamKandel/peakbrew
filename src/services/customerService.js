@@ -29,6 +29,7 @@ export class CustomerService {
         updatedAt: new Date(),
         totalInvoices: 0,
         totalRevenue: 0,
+        pendingAmount: 0,
         lastInvoiceDate: null,
         paymentHistory: [],
         notes: customerData.notes || '',
@@ -170,7 +171,14 @@ export class CustomerService {
       const multiplier = operation === 'add' ? 1 : -1;
       const updatedStats = {
         totalInvoices: customer.totalInvoices + (multiplier * 1),
-        totalRevenue: customer.totalRevenue + (multiplier * (invoiceData.total || 0)),
+        // Only count paid invoices as revenue
+        totalRevenue: invoiceData.status === 'paid' ? 
+          customer.totalRevenue + (multiplier * (invoiceData.total || 0)) : 
+          customer.totalRevenue,
+        // Track pending amount
+        pendingAmount: invoiceData.status === 'pending' ? 
+          (customer.pendingAmount || 0) + (multiplier * (invoiceData.total || 0)) : 
+          (customer.pendingAmount || 0),
         lastInvoiceDate: operation === 'add' ? new Date() : customer.lastInvoiceDate,
         updatedAt: new Date()
       };
@@ -215,6 +223,7 @@ export class CustomerService {
         averageRevenuePerCustomer: customers.length > 0 
           ? customers.reduce((sum, c) => sum + (c.totalRevenue || 0), 0) / customers.length 
           : 0,
+        totalPendingAmount: customers.reduce((sum, c) => sum + (c.pendingAmount || 0), 0),
         customerGrowth: this.calculateCustomerGrowth(customers)
       };
 
@@ -268,6 +277,7 @@ export class CustomerService {
   formatMonth(date) {
     return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
   }
+
 
   // Search customers with advanced filters
   async searchCustomers(userId, searchOptions) {

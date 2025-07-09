@@ -574,39 +574,6 @@ const CustomerForm = ({ customer = null, onSave, onCancel }) => {
                     />
                   </Grid.Col>
                   
-                  <Grid.Col span={12}>
-                    <Select
-                      label="Industry"
-                      placeholder="Select industry"
-                      data={[
-                        { value: 'retail', label: 'Retail' },
-                        { value: 'wholesale', label: 'Wholesale' },
-                        { value: 'manufacturing', label: 'Manufacturing' },
-                        { value: 'technology', label: 'Technology' },
-                        { value: 'healthcare', label: 'Healthcare' },
-                        { value: 'finance', label: 'Finance' },
-                        { value: 'education', label: 'Education' },
-                        { value: 'hospitality', label: 'Hospitality' },
-                        { value: 'construction', label: 'Construction' },
-                        { value: 'food_beverage', label: 'Food & Beverage' },
-                        { value: 'automotive', label: 'Automotive' },
-                        { value: 'real_estate', label: 'Real Estate' },
-                        { value: 'professional_services', label: 'Professional Services' },
-                        { value: 'other', label: 'Other' }
-                      ]}
-                      value={formData.industry}
-                      onChange={(value) => handleInputChange('industry', value)}
-                      styles={{
-                        label: { color: '#d4af37', fontWeight: 600 },
-                        input: {
-                          backgroundColor: 'rgba(74, 55, 40, 0.3)',
-                          border: '1px solid rgba(212, 175, 55, 0.3)',
-                          color: '#ffffff',
-                          '&:focus': { borderColor: '#d4af37' }
-                        }
-                      }}
-                    />
-                  </Grid.Col>
                 </Grid>
               </Card>
 

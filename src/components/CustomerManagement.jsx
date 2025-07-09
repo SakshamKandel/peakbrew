@@ -324,13 +324,13 @@ export default function CustomerManagement() {
       subtitle: 'per customer'
     },
     {
-      title: 'Top Customer',
-      value: customerStats.topCustomers?.[0]?.name || 'None',
-      icon: IconStar,
-      color: '#8b5cf6',
-      trend: formatCurrency(customerStats.topCustomers?.[0]?.totalRevenue || 0),
-      subtitle: 'highest revenue'
-    }
+      title: 'Pending Amount',
+      value: formatCurrency(customerStats.totalPendingAmount || 0),
+      icon: IconClock,
+      color: '#f59e0b',
+      trend: 'Awaiting Payment',
+      subtitle: 'pending invoices'
+    },
   ] : [];
 
   if (showForm) {
@@ -790,6 +790,7 @@ export default function CustomerManagement() {
                     <Table.Th style={{ color: '#d4af37', fontWeight: 600 }}>Customer</Table.Th>
                     <Table.Th style={{ color: '#d4af37', fontWeight: 600 }}>Contact</Table.Th>
                     <Table.Th style={{ color: '#d4af37', fontWeight: 600 }}>Revenue</Table.Th>
+                    <Table.Th style={{ color: '#d4af37', fontWeight: 600 }}>Pending</Table.Th>
                     <Table.Th style={{ color: '#d4af37', fontWeight: 600 }}>Invoices</Table.Th>
                     <Table.Th style={{ color: '#d4af37', fontWeight: 600 }}>Last Invoice</Table.Th>
                     <Table.Th style={{ color: '#d4af37', fontWeight: 600 }}>Status</Table.Th>
@@ -858,6 +859,11 @@ export default function CustomerManagement() {
                       <Table.Td>
                         <Text fw={600} size="sm" style={{ color: '#10b981' }}>
                           {formatCurrency(customer.totalRevenue)}
+                        </Text>
+                      </Table.Td>
+                      <Table.Td>
+                        <Text fw={600} size="sm" style={{ color: '#f59e0b' }}>
+                          {formatCurrency(customer.pendingAmount || 0)}
                         </Text>
                       </Table.Td>
                       <Table.Td>

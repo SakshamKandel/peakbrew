@@ -732,8 +732,7 @@ const InvoiceForm = ({ onSave, onCancel, invoice = null }) => {
               placeholder="Select status"
               data={[
                 { value: 'pending', label: 'Pending' },
-                { value: 'paid', label: 'Paid' },
-                { value: 'overdue', label: 'Overdue' }
+                { value: 'paid', label: 'Paid' }
               ]}
               value={formData.status}
               onChange={(value) => setFormData(prev => ({ ...prev, status: value }))}

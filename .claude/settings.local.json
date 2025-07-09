@@ -12,7 +12,8 @@
       "Bash(rm:*)",
       "Bash(npm run dev:*)",
       "Bash(cd:*)",
-      "Bash(cd:*)"
+      "Bash(cd:*)",
+      "Bash(rg:*)"
     ],
     "deny": []
   }

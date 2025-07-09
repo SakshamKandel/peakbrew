@@ -85,7 +85,6 @@ export class AdvancedAnalyticsService {
     
     const paidInvoices = invoices.filter(inv => inv.status === 'paid');
     const pendingInvoices = invoices.filter(inv => inv.status === 'pending');
-    const overdueInvoices = invoices.filter(inv => this.isOverdue(inv));
     
     const averageInvoiceValue = totalInvoices > 0 ? totalRevenue / totalInvoices : 0;
     const averageRevenuePerCustomer = totalCustomers > 0 ? totalRevenue / totalCustomers : 0;
@@ -96,12 +95,10 @@ export class AdvancedAnalyticsService {
       totalCustomers,
       paidInvoices: paidInvoices.length,
       pendingInvoices: pendingInvoices.length,
-      overdueInvoices: overdueInvoices.length,
       averageInvoiceValue,
       averageRevenuePerCustomer,
       collectionRate: totalInvoices > 0 ? (paidInvoices.length / totalInvoices) * 100 : 0,
       pendingAmount: pendingInvoices.reduce((sum, inv) => sum + (inv.total || 0), 0),
-      overdueAmount: overdueInvoices.reduce((sum, inv) => sum + (inv.total || 0), 0)
     };
   }
 

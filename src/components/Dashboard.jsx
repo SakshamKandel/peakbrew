@@ -120,6 +120,7 @@ export default function Dashboard() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [showDetailedView, setShowDetailedView] = useState(null);
   const { logout, currentUser } = useAuth();
   const navigate = useNavigate();
 
@@ -210,6 +211,7 @@ export default function Dashboard() {
   const handleRefresh = () => {
     fetchInvoices(true);
   };
+
 
   const handleCreateInvoice = async (invoiceData) => {
     if (!currentUser) {
@@ -374,12 +376,10 @@ export default function Dashboard() {
   const totalAmount = invoices.reduce((sum, invoice) => sum + (invoice.total || 0), 0);
   const paidInvoices = invoices.filter(inv => inv.status === 'paid').length;
   const pendingInvoices = invoices.filter(inv => inv.status === 'pending').length;
-  const overdueInvoices = invoices.filter(inv => {
-    const invoiceDate = new Date(inv.date);
-    const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    return inv.status !== 'paid' && invoiceDate < thirtyDaysAgo;
-  }).length;
+
+  // Calculate revenue separately for paid invoices only
+  const totalRevenue = invoices.filter(inv => inv.status === 'paid').reduce((sum, invoice) => sum + (invoice.total || 0), 0);
+  const pendingAmount = invoices.filter(inv => inv.status === 'pending').reduce((sum, invoice) => sum + (invoice.total || 0), 0);
 
   // Real-time monthly data calculation
   const currentMonth = new Date();
@@ -414,13 +414,18 @@ export default function Dashboard() {
       return invoiceDate >= startDate && invoiceDate <= endDate;
     });
     
-    console.log(`Monthly data for ${format(month, 'MMM yyyy')}: ${monthInvoices.length} invoices, $${monthInvoices.reduce((sum, inv) => sum + (inv.total || 0), 0)} revenue`);
+    console.log(`Monthly data for ${format(month, 'MMM yyyy')}: ${monthInvoices.length} invoices, $${monthInvoices.filter(inv => inv.status === 'paid').reduce((sum, inv) => sum + (inv.total || 0), 0)} revenue`);
     
+    const paidInvoicesInMonth = monthInvoices.filter(inv => inv.status === 'paid');
+    const pendingInvoicesInMonth = monthInvoices.filter(inv => inv.status === 'pending');
+
     return {
       month: format(month, 'MMM'),
-      revenue: monthInvoices.reduce((sum, inv) => sum + (inv.total || 0), 0),
+      revenue: paidInvoicesInMonth.reduce((sum, inv) => sum + (inv.total || 0), 0),
+      pending: pendingInvoicesInMonth.reduce((sum, inv) => sum + (inv.total || 0), 0),
       invoices: monthInvoices.length,
-      paid: monthInvoices.filter(inv => inv.status === 'paid').length,
+      paidCount: paidInvoicesInMonth.length,
+      pendingCount: pendingInvoicesInMonth.length,
     };
   };
 
@@ -441,9 +446,8 @@ export default function Dashboard() {
   // Calculate real percentages
   const paidPercentage = totalInvoices > 0 ? ((paidInvoices / totalInvoices) * 100).toFixed(1) : 0;
   const pendingPercentage = totalInvoices > 0 ? ((pendingInvoices / totalInvoices) * 100).toFixed(1) : 0;
-  const overduePercentage = totalInvoices > 0 ? ((overdueInvoices / totalInvoices) * 100).toFixed(1) : 0;
   
-  // Revenue growth calculation
+  // Revenue growth calculation (only paid invoices)
   const currentMonthRevenue = monthlyData[3]?.revenue || 0;
   const lastMonthRevenue = monthlyData[2]?.revenue || 0;
   const revenueGrowth = lastMonthRevenue > 0 ? 
@@ -455,48 +459,82 @@ export default function Dashboard() {
   console.log('Revenue growth:', revenueGrowth + '%');
 
   const statusData = [
-    { name: 'Paid', value: paidInvoices, color: '#10b981', percentage: paidPercentage },
-    { name: 'Pending', value: pendingInvoices, color: '#f59e0b', percentage: pendingPercentage },
-    { name: 'Overdue', value: overdueInvoices, color: '#ef4444', percentage: overduePercentage },
+    { 
+      name: 'Paid', 
+      value: paidInvoices, 
+      amount: totalRevenue,
+      color: '#10b981', 
+      percentage: paidPercentage,
+      description: 'Successfully collected'
+    },
+    { 
+      name: 'Pending', 
+      value: pendingInvoices, 
+      amount: pendingAmount,
+      color: '#f59e0b', 
+      percentage: pendingPercentage,
+      description: 'Awaiting payment'
+    },
   ];
+
+
+  // Helper function to get invoices by status for detailed view
+  const getInvoicesByStatus = (status) => {
+    switch (status) {
+      case 'paid':
+        return invoices.filter(inv => inv.status === 'paid');
+      case 'pending':
+        return invoices.filter(inv => inv.status === 'pending');
+      default:
+        return invoices;
+    }
+  };
 
   // Real-time stats cards with actual calculations
   const statsCards = [
     { 
-      title: 'Total Revenue', 
-      value: `$${totalAmount.toLocaleString()}`, 
+      title: 'Total Revenue (Paid)', 
+      value: `$${totalRevenue.toLocaleString()}`, 
       icon: IconCurrencyDollar, 
       color: '#10b981', 
-      trend: `${revenueGrowth >= 0 ? '+' : ''}${revenueGrowth}%`,
+      trend: `${paidInvoices} paid invoices`,
       isPositive: revenueGrowth >= 0,
-      subtitle: 'vs last month'
+      subtitle: `Growth: ${revenueGrowth >= 0 ? '+' : ''}${revenueGrowth}%`,
+      clickAction: () => setShowDetailedView('paid'),
+      statusType: 'paid'
+    },
+    { 
+      title: 'Awaiting Payment', 
+      value: `$${pendingAmount.toLocaleString()}`, 
+      icon: IconClock, 
+      color: '#f59e0b', 
+      trend: `${pendingInvoices} pending invoices`,
+      isPositive: false,
+      subtitle: 'click to view details',
+      clickAction: () => setShowDetailedView('pending'),
+      statusType: 'pending'
     },
     { 
       title: 'Total Invoices', 
       value: totalInvoices, 
       icon: IconFileText, 
-      color: '#d4af37', 
-      trend: `${totalInvoices}`,
+      color: '#6366f1', 
+      trend: `${Math.round((paidInvoices / totalInvoices) * 100)}% completed`,
       isPositive: true,
-      subtitle: 'all time'
+      subtitle: 'all time invoices',
+      clickAction: () => setShowDetailedView('all'),
+      statusType: 'all'
     },
     { 
-      title: 'Paid Invoices', 
-      value: paidInvoices, 
-      icon: IconCheck, 
-      color: '#10b981', 
-      trend: `${paidPercentage}%`,
-      isPositive: true,
-      subtitle: 'completion rate'
-    },
-    { 
-      title: 'Pending Payment', 
-      value: pendingInvoices, 
-      icon: IconClock, 
-      color: '#f59e0b', 
-      trend: `${pendingPercentage}%`,
-      isPositive: false,
-      subtitle: 'awaiting payment'
+      title: 'Payment Rate', 
+      value: `${paidPercentage}%`, 
+      icon: IconTarget, 
+      color: '#8b5cf6', 
+      trend: `${paidInvoices}/${totalInvoices} paid`,
+      isPositive: parseFloat(paidPercentage) > 70,
+      subtitle: 'success rate',
+      clickAction: () => setShowDetailedView('paid'),
+      statusType: 'paid'
     },
   ];
 
@@ -612,6 +650,7 @@ export default function Dashboard() {
 
 
 
+
             <Button
               leftSection={<IconUsers size={14} />}
               onClick={() => navigate('/customers')}
@@ -693,7 +732,7 @@ export default function Dashboard() {
         <Container size="xl" p={{ base: 'md', sm: 'xl' }} px={{ base: 'sm', sm: 'xl' }}>
           {/* Real-time Stats Grid */}
           <div ref={statsRef}>
-            <SimpleGrid cols={{ base: 1, xs: 2, sm: 2, lg: 4 }} spacing={{ base: 'md', sm: 'xl' }} mb={{ base: 'md', sm: 'xl' }}>
+            <SimpleGrid cols={{ base: 1, xs: 2, sm: 2, md: 2, lg: 4 }} spacing={{ base: 'sm', sm: 'md', lg: 'lg' }} mb={{ base: 'md', sm: 'xl' }}>
               {trail.map((style, index) => {
                 const card = statsCards[index];
                 const Icon = card.icon;
@@ -711,15 +750,18 @@ export default function Dashboard() {
                         transition: 'all 0.3s ease',
                         cursor: 'pointer'
                       }}
+                      onClick={() => card.clickAction && card.clickAction()}
                       onMouseEnter={(e) => {
                         e.currentTarget.style.transform = 'translateY(-8px)';
                         e.currentTarget.style.background = 'linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(74, 55, 40, 0.08) 100%)';
-                        e.currentTarget.style.borderColor = `${card.color}40`;
+                        e.currentTarget.style.borderColor = `${card.color}60`;
+                        e.currentTarget.style.boxShadow = `0 12px 40px ${card.color}20`;
                       }}
                       onMouseLeave={(e) => {
                         e.currentTarget.style.transform = 'translateY(0)';
                         e.currentTarget.style.background = 'linear-gradient(135deg, rgba(212, 175, 55, 0.08) 0%, rgba(74, 55, 40, 0.03) 100%)';
                         e.currentTarget.style.borderColor = 'rgba(212, 175, 55, 0.2)';
+                        e.currentTarget.style.boxShadow = 'none';
                       }}
                     >
                       <Group justify="space-between" mb="lg">
@@ -751,9 +793,14 @@ export default function Dashboard() {
                         </div>
                       </Group>
                       
-                      <Text size="sm" fw={500} style={{ color: '#d1d5db', marginBottom: '8px' }}>
-                        {card.title}
-                      </Text>
+                      <Group justify="space-between" align="center" mb="xs">
+                        <Text size="sm" fw={500} style={{ color: '#d1d5db' }}>
+                          {card.title}
+                        </Text>
+                        <Text size="xs" style={{ color: '#a1a1aa', fontSize: '10px' }}>
+                          Click for details
+                        </Text>
+                      </Group>
                       
                       <Text fw={900} size="2.5rem" style={{
                         color: '#ffffff',
@@ -798,10 +845,10 @@ export default function Dashboard() {
               <Group justify="space-between" mb="lg">
                 <div>
                   <Title order={3} style={{ color: '#d4af37', marginBottom: '4px' }}>
-                    Revenue Analytics
+                    Payment Status Analytics
                   </Title>
                   <Text size="sm" style={{ color: '#a1a1aa' }}>
-                    Real-time monthly performance
+                    Paid Revenue • Pending Payments
                   </Text>
                 </div>
                 <ThemeIcon size={40} radius="lg" style={{ background: 'rgba(212, 175, 55, 0.1)', color: '#d4af37' }}>
@@ -810,12 +857,16 @@ export default function Dashboard() {
               </Group>
               
               {validMonthlyData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={300}>
-                  <AreaChart data={validMonthlyData}>
+                <ResponsiveContainer width="100%" height={350}>
+                  <LineChart data={validMonthlyData}>
                     <defs>
                       <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#d4af37" stopOpacity={0.3}/>
-                        <stop offset="95%" stopColor="#d4af37" stopOpacity={0}/>
+                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                      </linearGradient>
+                      <linearGradient id="colorPending" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#f59e0b" stopOpacity={0}/>
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
@@ -831,18 +882,43 @@ export default function Dashboard() {
                         borderRadius: '8px',
                         color: '#ffffff'
                       }}
-                      formatter={(value, name) => [`$${value.toLocaleString()}`, 'Revenue']}
+                      formatter={(value, name) => {
+                        const labels = {
+                          revenue: 'Paid Revenue',
+                          pending: 'Pending Amount'
+                        };
+                        return [`$${value.toLocaleString()}`, labels[name] || name];
+                      }}
                       labelStyle={{ color: '#ffffff' }}
+                      labelFormatter={(label) => `Month: ${label}`}
                     />
-                    <Area
+                    <Legend 
+                      wrapperStyle={{ color: '#ffffff' }}
+                      formatter={(value) => {
+                        const labels = {
+                          revenue: 'Paid Revenue',
+                          pending: 'Pending Amount'
+                        };
+                        return labels[value] || value;
+                      }}
+                    />
+                    <Line
                       type="monotone"
                       dataKey="revenue"
-                      stroke="#d4af37"
-                      strokeWidth={2}
-                      fillOpacity={1}
-                      fill="url(#colorRevenue)"
+                      stroke="#10b981"
+                      strokeWidth={3}
+                      dot={{ fill: '#10b981', strokeWidth: 2, r: 6 }}
+                      activeDot={{ r: 8, stroke: '#10b981', strokeWidth: 2 }}
                     />
-                  </AreaChart>
+                    <Line
+                      type="monotone"
+                      dataKey="pending"
+                      stroke="#f59e0b"
+                      strokeWidth={3}
+                      dot={{ fill: '#f59e0b', strokeWidth: 2, r: 6 }}
+                      activeDot={{ r: 8, stroke: '#f59e0b', strokeWidth: 2 }}
+                    />
+                  </LineChart>
                 </ResponsiveContainer>
               ) : (
                 <div style={{ 
@@ -872,10 +948,10 @@ export default function Dashboard() {
               <Group justify="space-between" mb="lg">
                 <div>
                   <Title order={3} style={{ color: '#d4af37', marginBottom: '4px' }}>
-                    Invoice Status
+                    Payment Status Distribution
                   </Title>
                   <Text size="sm" style={{ color: '#a1a1aa' }}>
-                    Payment distribution breakdown
+                    Invoice counts and amounts by status
                   </Text>
                 </div>
                 <RingProgress
@@ -888,26 +964,78 @@ export default function Dashboard() {
                 />
               </Group>
               
-              <SimpleGrid cols={3} spacing="md" mb="lg">
+              <SimpleGrid cols={2} spacing="lg" mb="xl">
                 {statusData.map((item, index) => (
-                  <div key={index} style={{ textAlign: 'center' }}>
-                    <div style={{
-                      width: 8,
-                      height: 8,
-                      borderRadius: '50%',
-                      backgroundColor: item.color,
-                      margin: '0 auto 8px'
-                    }} />
-                    <Text size="xl" fw={700} style={{ color: '#ffffff' }}>
-                      {item.value}
-                    </Text>
-                    <Text size="xs" style={{ color: '#a1a1aa' }}>
-                      {item.name}
-                    </Text>
-                    <Text size="sm" fw={600} style={{ color: item.color }}>
-                      {item.percentage}%
-                    </Text>
-                  </div>
+                  <Card
+                    key={index}
+                    padding="lg"
+                    style={{
+                      cursor: 'pointer',
+                      borderRadius: '12px',
+                      transition: 'all 0.3s ease',
+                      border: `2px solid ${item.color}40`,
+                      background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)',
+                      backdropFilter: 'blur(10px)',
+                      textAlign: 'center',
+                      minHeight: '180px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'center',
+                      alignItems: 'center'
+                    }}
+                    onClick={() => setShowDetailedView(item.name.toLowerCase())}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor = `${item.color}15`;
+                      e.currentTarget.style.borderColor = `${item.color}80`;
+                      e.currentTarget.style.transform = 'translateY(-4px)';
+                      e.currentTarget.style.boxShadow = `0 12px 24px ${item.color}20`;
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
+                      e.currentTarget.style.borderColor = `${item.color}40`;
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = 'none';
+                    }}
+                  >
+                    <Stack gap="sm" align="center">
+                      <div style={{
+                        width: 16,
+                        height: 16,
+                        borderRadius: '50%',
+                        backgroundColor: item.color,
+                        boxShadow: `0 0 20px ${item.color}60`
+                      }} />
+                      
+                      <Text size="2xl" fw={900} style={{ color: '#ffffff', lineHeight: 1 }}>
+                        {item.value}
+                      </Text>
+                      
+                      <Text size="sm" fw={500} style={{ color: '#a1a1aa' }}>
+                        {item.name} Invoices
+                      </Text>
+                      
+                      <Text size="lg" fw={700} style={{ color: item.color, lineHeight: 1 }}>
+                        ${item.amount.toLocaleString()}
+                      </Text>
+                      
+                      <Text size="xs" style={{ color: '#9ca3af', textAlign: 'center' }}>
+                        {item.description}
+                      </Text>
+                      
+                      <Badge
+                        color={item.color.replace('#', '')}
+                        variant="light"
+                        size="sm"
+                        style={{ textTransform: 'none', fontWeight: 600 }}
+                      >
+                        {item.percentage}% of total
+                      </Badge>
+                      
+                      <Text size="xs" style={{ color: '#6b7280', marginTop: '4px' }}>
+                        Click for details
+                      </Text>
+                    </Stack>
+                  </Card>
                 ))}
               </SimpleGrid>
               
@@ -933,6 +1061,11 @@ export default function Dashboard() {
                       borderRadius: '8px',
                       color: '#ffffff'
                     }}
+                    formatter={(value, name, props) => [
+                      `${value} invoices`, 
+                      `${props.payload.name} - $${props.payload.amount.toLocaleString()}`
+                    ]}
+                    labelFormatter={() => 'Invoice Status'}
                   />
                 </PieChart>
               </ResponsiveContainer>
@@ -1325,6 +1458,202 @@ export default function Dashboard() {
           </div>
         </Stack>
       </Drawer>
+
+      {/* Detailed View Modal */}
+      <Modal
+        opened={!!showDetailedView}
+        onClose={() => setShowDetailedView(null)}
+        title={
+          <Group gap="sm" align="center">
+            <Logo size={50} />
+            <div>
+              <Title order={3} style={{ color: '#d4af37', marginBottom: '4px', fontSize: '1.4rem' }}>
+                {showDetailedView === 'paid' && 'Paid Invoices Details'}
+                {showDetailedView === 'pending' && 'Pending Payments Details'}
+                {showDetailedView === 'all' && 'All Invoices Overview'}
+              </Title>
+              <Text size="sm" style={{ color: '#a1a1aa' }}>
+                {showDetailedView === 'paid' && 'Successfully collected payments'}
+                {showDetailedView === 'pending' && 'Invoices awaiting payment'}
+                {showDetailedView === 'all' && 'Complete invoice overview'}
+              </Text>
+            </div>
+          </Group>
+        }
+        size="xl"
+        centered
+        radius="xl"
+        styles={{
+          modal: {
+            backgroundColor: 'rgba(26, 19, 16, 0.98)',
+            backdropFilter: 'blur(20px)',
+            border: '2px solid rgba(212, 175, 55, 0.3)',
+            borderRadius: '16px',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.8)',
+            color: '#ffffff'
+          },
+          header: {
+            background: 'linear-gradient(135deg, rgba(212, 175, 55, 0.15) 0%, rgba(74, 55, 40, 0.1) 100%)',
+            borderBottom: '1px solid rgba(212, 175, 55, 0.3)',
+            padding: '20px 24px',
+            borderRadius: '16px 16px 0 0'
+          },
+          body: {
+            padding: '24px',
+            maxHeight: '70vh',
+            overflowY: 'auto',
+            backgroundColor: 'transparent'
+          },
+          close: {
+            color: '#ffffff',
+            '&:hover': {
+              backgroundColor: 'rgba(212, 175, 55, 0.1)'
+            }
+          }
+        }}
+        overlayProps={{
+          backgroundOpacity: 0.75,
+          blur: 10,
+          style: { backgroundColor: 'rgba(0, 0, 0, 0.8)' }
+        }}
+      >
+        {showDetailedView && (
+          <Stack gap="lg">
+            <Card 
+              padding="lg" 
+              style={{ 
+                background: 'linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(74, 55, 40, 0.05) 100%)',
+                border: '1px solid rgba(212, 175, 55, 0.2)',
+                borderRadius: '12px'
+              }}
+            >
+              <Group justify="space-between" align="center">
+                <div>
+                  <Text size="xl" fw={700} style={{ color: '#d4af37', marginBottom: '4px' }}>
+                    {showDetailedView === 'paid' && `$${totalRevenue.toLocaleString()}`}
+                    {showDetailedView === 'pending' && `$${pendingAmount.toLocaleString()}`}
+                    {showDetailedView === 'all' && `${totalInvoices} Total`}
+                  </Text>
+                  <Text size="sm" style={{ color: '#a1a1aa' }}>
+                    {showDetailedView === 'paid' && 'Total Revenue Collected'}
+                    {showDetailedView === 'pending' && 'Total Pending Amount'}
+                    {showDetailedView === 'all' && 'Total Invoices Created'}
+                  </Text>
+                </div>
+                <Badge
+                  color={
+                    showDetailedView === 'paid' ? 'green' :
+                    showDetailedView === 'pending' ? 'yellow' : 'blue'
+                  }
+                  size="xl"
+                  variant="light"
+                  style={{ fontSize: '14px', padding: '8px 12px' }}
+                >
+                  {getInvoicesByStatus(showDetailedView).length} Invoices
+                </Badge>
+              </Group>
+            </Card>
+            
+            <Card 
+              style={{ 
+                background: 'rgba(255, 255, 255, 0.02)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                borderRadius: '12px',
+                overflow: 'hidden'
+              }}
+            >
+              <ScrollArea style={{ height: 450 }}>
+                <Table
+                  style={{ 
+                    '--table-border-color': 'rgba(255, 255, 255, 0.1)',
+                    fontSize: '14px'
+                  }}
+                  verticalSpacing="md"
+                  horizontalSpacing="lg"
+                >
+                  <Table.Thead style={{ 
+                    backgroundColor: 'rgba(212, 175, 55, 0.1)',
+                    borderBottom: '2px solid rgba(212, 175, 55, 0.3)',
+                    position: 'sticky',
+                    top: 0,
+                    zIndex: 10
+                  }}>
+                    <Table.Tr>
+                      <Table.Th style={{ color: '#d4af37', fontWeight: 700, padding: '16px' }}>Invoice #</Table.Th>
+                      <Table.Th style={{ color: '#d4af37', fontWeight: 700, padding: '16px' }}>Customer</Table.Th>
+                      <Table.Th style={{ color: '#d4af37', fontWeight: 700, padding: '16px' }}>Amount</Table.Th>
+                      <Table.Th style={{ color: '#d4af37', fontWeight: 700, padding: '16px' }}>Date</Table.Th>
+                      <Table.Th style={{ color: '#d4af37', fontWeight: 700, padding: '16px' }}>Status</Table.Th>
+                    </Table.Tr>
+                  </Table.Thead>
+                  <Table.Tbody>
+                    {getInvoicesByStatus(showDetailedView).length === 0 ? (
+                      <Table.Tr>
+                        <Table.Td colSpan={5} style={{ textAlign: 'center', padding: '40px', color: '#a1a1aa' }}>
+                          <Text size="lg">No invoices found for this status</Text>
+                        </Table.Td>
+                      </Table.Tr>
+                    ) : (
+                      getInvoicesByStatus(showDetailedView).map((invoice, index) => (
+                        <Table.Tr 
+                          key={invoice.id} 
+                          style={{ 
+                            color: '#ffffff',
+                            borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
+                            transition: 'all 0.2s ease'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = 'rgba(212, 175, 55, 0.05)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = 'transparent';
+                          }}
+                        >
+                          <Table.Td style={{ padding: '16px', fontWeight: 600, color: '#6366f1' }}>
+                            #{invoice.invoiceNumber}
+                          </Table.Td>
+                          <Table.Td style={{ padding: '16px' }}>
+                            <div>
+                              <Text style={{ color: '#ffffff', fontWeight: 500 }}>
+                                {invoice.customerName}
+                              </Text>
+                              {invoice.customerEmail && (
+                                <Text size="xs" style={{ color: '#a1a1aa' }}>
+                                  {invoice.customerEmail}
+                                </Text>
+                              )}
+                            </div>
+                          </Table.Td>
+                          <Table.Td style={{ padding: '16px', fontWeight: 600, color: '#10b981' }}>
+                            ${invoice.total?.toLocaleString() || '0'}
+                          </Table.Td>
+                          <Table.Td style={{ padding: '16px', color: '#d1d5db' }}>
+                            {formatInvoiceDate(invoice.date)}
+                          </Table.Td>
+                          <Table.Td style={{ padding: '16px' }}>
+                            <Badge
+                              color={
+                                invoice.status === 'paid' ? 'green' :
+                                invoice.status === 'pending' ? 'yellow' : 'red'
+                              }
+                              variant="light"
+                              radius="lg"
+                              size="md"
+                              style={{ textTransform: 'capitalize', fontWeight: 600 }}
+                            >
+                              {invoice.status || 'pending'}
+                            </Badge>
+                          </Table.Td>
+                        </Table.Tr>
+                      ))
+                    )}
+                  </Table.Tbody>
+                </Table>
+              </ScrollArea>
+            </Card>
+          </Stack>
+        )}
+      </Modal>
 
       {/* Enhanced Modals */}
       <Modal
