@@ -121,8 +121,22 @@ export default function Dashboard() {
   const [darkMode, setDarkMode] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [showDetailedView, setShowDetailedView] = useState(null);
+  const [isMobile, setIsMobile] = useState(false);
+  const [isSmall, setIsSmall] = useState(false);
   const { logout, currentUser } = useAuth();
   const navigate = useNavigate();
+
+  // Responsive handling
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+      setIsSmall(window.innerWidth < 480);
+    };
+    
+    handleResize(); // Set initial values
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Animation refs
   const { ref: statsRef, inView: statsInView } = useInView({ threshold: 0.1, triggerOnce: true });
@@ -577,7 +591,7 @@ export default function Dashboard() {
       background: 'linear-gradient(135deg, #4a3728 0%, #2d1f1a 50%, #1a1310 100%)',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
       overflow: 'hidden',
-      padding: '8px',
+      padding: isMobile ? '4px' : '8px',
       boxSizing: 'border-box'
     }}>
       <LoadingOverlay 
@@ -594,27 +608,27 @@ export default function Dashboard() {
         }}
       />
       
-      {/* Compact Navigation Bar */}
+      {/* Mobile-Optimized Navigation Bar */}
       <div style={{
         position: 'fixed',
-        top: '12px',
-        left: '12px',
-        right: '12px',
+        top: isMobile ? '4px' : '12px',
+        left: isMobile ? '4px' : '12px',
+        right: isMobile ? '4px' : '12px',
         zIndex: 1000,
         background: 'rgba(255, 255, 255, 0.05)',
         backdropFilter: 'blur(20px)',
         border: '1px solid rgba(255, 255, 255, 0.1)',
-        borderRadius: '16px',
-        padding: '8px 12px',
+        borderRadius: isMobile ? '12px' : '16px',
+        padding: isMobile ? '6px 8px' : '8px 12px',
         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
       }} className="responsive-nav">
-        <Flex justify="space-between" align="center" wrap="wrap" gap="sm">
+        <Flex justify="space-between" align="center" wrap="wrap" gap={isMobile ? 'xs' : 'sm'}>
           <Group gap={{ base: 'xs', sm: 'lg' }}>
-            <Logo size={40} className="responsive-nav-logo" />
+            <Logo size={isMobile ? 32 : 40} className="responsive-nav-logo" />
             <div>
               <Title order={3} style={{ 
                 color: '#ffffff', 
-                fontSize: '1rem', 
+                fontSize: isMobile ? '0.85rem' : '1rem', 
                 fontWeight: 700,
                 margin: 0,
                 background: 'linear-gradient(135deg, #d4af37 0%, #f4d03f 100%)',
@@ -622,18 +636,20 @@ export default function Dashboard() {
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent'
               }} className="responsive-nav-title">
-                {COMPANY_INFO.name}
+                {isSmall ? 'PeakBrew' : COMPANY_INFO.name}
               </Title>
-              <Text size="xs" style={{ color: '#a1a1aa', margin: 0, fontSize: '10px' }} className="responsive-nav-subtitle">
-                Analytics Dashboard
-              </Text>
+              {!isSmall && (
+                <Text size="xs" style={{ color: '#a1a1aa', margin: 0, fontSize: isMobile ? '8px' : '10px' }} className="responsive-nav-subtitle">
+                  Analytics Dashboard
+                </Text>
+              )}
             </div>
           </Group>
           
-          <Group gap="sm">
+          <Group gap={isMobile ? 'xs' : 'sm'}>
             <Tooltip label="Refresh Data">
               <ActionIcon
-                size={36}
+                size={isMobile ? 32 : 36}
                 onClick={handleRefresh}
                 loading={refreshing}
                 style={{
@@ -644,53 +660,87 @@ export default function Dashboard() {
                   transition: 'all 0.3s ease'
                 }}
               >
-                <IconRefresh size={16} />
+                <IconRefresh size={isMobile ? 14 : 16} />
               </ActionIcon>
             </Tooltip>
 
 
 
 
-            <Button
-              leftSection={<IconUsers size={14} />}
-              onClick={() => navigate('/customers')}
-              size="sm"
-              variant="light"
-              style={{
-                background: 'rgba(99, 102, 241, 0.1)',
-                color: '#6366f1',
-                border: '1px solid rgba(99, 102, 241, 0.2)',
-                borderRadius: '10px',
-                transition: 'all 0.3s ease'
-              }}
-              className="nav-btn-customers"
-            >
-              <span className="btn-text-full">Customers</span>
-              <span className="btn-text-short">CRM</span>
-            </Button>
+            {isSmall ? (
+              <ActionIcon
+                size={32}
+                onClick={() => navigate('/customers')}
+                variant="light"
+                style={{
+                  background: 'rgba(99, 102, 241, 0.1)',
+                  color: '#6366f1',
+                  border: '1px solid rgba(99, 102, 241, 0.2)',
+                  borderRadius: '10px',
+                  transition: 'all 0.3s ease'
+                }}
+                title="Customers"
+              >
+                <IconUsers size={14} />
+              </ActionIcon>
+            ) : (
+              <Button
+                leftSection={<IconUsers size={14} />}
+                onClick={() => navigate('/customers')}
+                size={isMobile ? 'xs' : 'sm'}
+                variant="light"
+                style={{
+                  background: 'rgba(99, 102, 241, 0.1)',
+                  color: '#6366f1',
+                  border: '1px solid rgba(99, 102, 241, 0.2)',
+                  borderRadius: '10px',
+                  transition: 'all 0.3s ease'
+                }}
+                className="nav-btn-customers"
+              >
+                {isMobile ? 'CRM' : 'Customers'}
+              </Button>
+            )}
+
+            {isSmall ? (
+              <ActionIcon
+                size={32}
+                onClick={() => navigate('/calculator')}
+                variant="light"
+                style={{
+                  background: 'rgba(34, 197, 94, 0.1)',
+                  color: '#22c55e',
+                  border: '1px solid rgba(34, 197, 94, 0.2)',
+                  borderRadius: '10px',
+                  transition: 'all 0.3s ease'
+                }}
+                title="Calculator"
+              >
+                <IconCalculator size={14} />
+              </ActionIcon>
+            ) : (
+              <Button
+                leftSection={<IconCalculator size={14} />}
+                onClick={() => navigate('/calculator')}
+                size={isMobile ? 'xs' : 'sm'}
+                variant="light"
+                style={{
+                  background: 'rgba(34, 197, 94, 0.1)',
+                  color: '#22c55e',
+                  border: '1px solid rgba(34, 197, 94, 0.2)',
+                  borderRadius: '10px',
+                  transition: 'all 0.3s ease'
+                }}
+                className="nav-btn-calculator"
+              >
+                {isMobile ? 'Calc' : 'Calculator'}
+              </Button>
+            )}
 
             <Button
-              leftSection={<IconCalculator size={14} />}
-              onClick={() => navigate('/calculator')}
-              size="sm"
-              variant="light"
-              style={{
-                background: 'rgba(34, 197, 94, 0.1)',
-                color: '#22c55e',
-                border: '1px solid rgba(34, 197, 94, 0.2)',
-                borderRadius: '10px',
-                transition: 'all 0.3s ease'
-              }}
-              className="nav-btn-calculator"
-            >
-              <span className="btn-text-full">Calculator</span>
-              <span className="btn-text-short">Calc</span>
-            </Button>
-
-            <Button
-              leftSection={<IconPlus size={14} />}
+              leftSection={<IconPlus size={isMobile ? 12 : 14} />}
               onClick={() => setShowForm(true)}
-              size="sm"
+              size={isMobile ? 'xs' : 'sm'}
               style={{
                 background: 'linear-gradient(135deg, #d4af37 0%, #f4d03f 100%)',
                 color: '#1a1a1a',
@@ -698,38 +748,56 @@ export default function Dashboard() {
                 fontWeight: 600,
                 borderRadius: '10px',
                 boxShadow: '0 4px 12px rgba(212, 175, 55, 0.3)',
-                transition: 'all 0.3s ease'
+                transition: 'all 0.3s ease',
+                fontSize: isMobile ? '12px' : '14px',
+                padding: isMobile ? '4px 8px' : '8px 12px'
               }}
               className="nav-btn-primary"
             >
-              <span className="btn-text-full">New Invoice</span>
-              <span className="btn-text-short">New</span>
+              {isSmall ? '+' : isMobile ? 'New' : 'New Invoice'}
             </Button>
 
-            <Button
-              leftSection={<IconLogout size={14} />}
-              onClick={handleLogout}
-              size="sm"
-              variant="light"
-              style={{
-                background: 'rgba(239, 68, 68, 0.1)',
-                color: '#ef4444',
-                border: '1px solid rgba(239, 68, 68, 0.2)',
-                borderRadius: '10px',
-                transition: 'all 0.3s ease'
-              }}
-              className="nav-btn-logout"
-            >
-              <span className="btn-text-full">Logout</span>
-              <span className="btn-text-short">Out</span>
-            </Button>
+            {isSmall ? (
+              <ActionIcon
+                size={32}
+                onClick={handleLogout}
+                variant="light"
+                style={{
+                  background: 'rgba(239, 68, 68, 0.1)',
+                  color: '#ef4444',
+                  border: '1px solid rgba(239, 68, 68, 0.2)',
+                  borderRadius: '10px',
+                  transition: 'all 0.3s ease'
+                }}
+                title="Logout"
+              >
+                <IconLogout size={14} />
+              </ActionIcon>
+            ) : (
+              <Button
+                leftSection={<IconLogout size={14} />}
+                onClick={handleLogout}
+                size={isMobile ? 'xs' : 'sm'}
+                variant="light"
+                style={{
+                  background: 'rgba(239, 68, 68, 0.1)',
+                  color: '#ef4444',
+                  border: '1px solid rgba(239, 68, 68, 0.2)',
+                  borderRadius: '10px',
+                  transition: 'all 0.3s ease'
+                }}
+                className="nav-btn-logout"
+              >
+                {isMobile ? 'Out' : 'Logout'}
+              </Button>
+            )}
           </Group>
         </Flex>
       </div>
 
-      {/* Main Content with Top Margin */}
-      <div style={{ paddingTop: '90px' }} className="responsive-main-content">
-        <Container size="xl" p={{ base: 'md', sm: 'xl' }} px={{ base: 'sm', sm: 'xl' }}>
+      {/* Mobile-Optimized Main Content */}
+      <div style={{ paddingTop: isMobile ? '75px' : '90px' }} className="responsive-main-content">
+        <Container size="xl" p={{ base: 'xs', sm: 'md', md: 'xl' }} px={{ base: 'xs', sm: 'sm', md: 'xl' }}>
           {/* Real-time Stats Grid */}
           <div ref={statsRef}>
             <SimpleGrid cols={{ base: 1, xs: 2, sm: 2, md: 2, lg: 4 }} spacing={{ base: 'sm', sm: 'md', lg: 'lg' }} mb={{ base: 'md', sm: 'xl' }}>
@@ -740,8 +808,8 @@ export default function Dashboard() {
                   <animated.div key={index} style={style}>
                     <Card
                       shadow="xl"
-                      padding="xl"
-                      radius="xl"
+                      padding={isMobile ? 'md' : 'xl'}
+                      radius={isMobile ? 'lg' : 'xl'}
                       style={{
                         background: 'linear-gradient(135deg, rgba(212, 175, 55, 0.08) 0%, rgba(74, 55, 40, 0.03) 100%)',
                         backdropFilter: 'blur(20px)',
@@ -764,9 +832,9 @@ export default function Dashboard() {
                         e.currentTarget.style.boxShadow = 'none';
                       }}
                     >
-                      <Group justify="space-between" mb="lg">
+                      <Group justify="space-between" mb={isMobile ? 'md' : 'lg'}>
                         <ThemeIcon 
-                          size={60}
+                          size={isMobile ? 48 : 60}
                           radius="xl"
                           style={{ 
                             background: `${card.color}20`,
@@ -774,7 +842,7 @@ export default function Dashboard() {
                             border: `1px solid ${card.color}30`
                           }} 
                         >
-                          <Icon size={28} />
+                          <Icon size={isMobile ? 22 : 28} />
                         </ThemeIcon>
                         <div style={{ textAlign: 'right' }}>
                           <Text size="xs" style={{ color: '#a1a1aa', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
@@ -782,9 +850,9 @@ export default function Dashboard() {
                           </Text>
                           <Group gap="xs" justify="flex-end">
                             {card.isPositive ? (
-                              <IconArrowUpRight size={16} style={{ color: '#10b981' }} />
+                              <IconArrowUpRight size={isMobile ? 14 : 16} style={{ color: '#10b981' }} />
                             ) : (
-                              <IconArrowDownRight size={16} style={{ color: '#ef4444' }} />
+                              <IconArrowDownRight size={isMobile ? 14 : 16} style={{ color: '#ef4444' }} />
                             )}
                             <Text size="sm" style={{ color: card.isPositive ? '#10b981' : '#ef4444', fontWeight: 600 }}>
                               {card.trend}
@@ -802,10 +870,10 @@ export default function Dashboard() {
                         </Text>
                       </Group>
                       
-                      <Text fw={900} size="2.5rem" style={{
+                      <Text fw={900} size={isMobile ? '1.8rem' : '2.5rem'} style={{
                         color: '#ffffff',
                         lineHeight: 1,
-                        marginBottom: '16px'
+                        marginBottom: isMobile ? '12px' : '16px'
                       }}>
                         {typeof card.value === 'number' ? 
                           <CountUp end={card.value} duration={2} /> : 
@@ -829,12 +897,12 @@ export default function Dashboard() {
           </div>
 
           {/* Advanced Charts Section */}
-          <SimpleGrid cols={{ base: 1, lg: 2 }} spacing="xl" mb="xl">
+          <SimpleGrid cols={{ base: 1, lg: 2 }} spacing={{ base: 'md', lg: 'xl' }} mb={{ base: 'md', lg: 'xl' }}>
             {/* Revenue Trend Chart */}
             <Card
               shadow="xl"
-              padding="xl"
-              radius="xl"
+              padding={isMobile ? 'md' : 'xl'}
+              radius={isMobile ? 'lg' : 'xl'}
               style={{
                 background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%)',
                 backdropFilter: 'blur(20px)',
@@ -842,7 +910,7 @@ export default function Dashboard() {
                 color: '#ffffff'
               }}
             >
-              <Group justify="space-between" mb="lg">
+              <Group justify="space-between" mb={isMobile ? 'md' : 'lg'}>
                 <div>
                   <Title order={3} style={{ color: '#d4af37', marginBottom: '4px' }}>
                     Payment Status Analytics
@@ -857,7 +925,7 @@ export default function Dashboard() {
               </Group>
               
               {validMonthlyData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={350}>
+                <ResponsiveContainer width="100%" height={isMobile ? 250 : 350}>
                   <LineChart data={validMonthlyData}>
                     <defs>
                       <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
@@ -936,8 +1004,8 @@ export default function Dashboard() {
             {/* Status Distribution */}
             <Card
               shadow="xl"
-              padding="xl"
-              radius="xl"
+              padding={isMobile ? 'md' : 'xl'}
+              radius={isMobile ? 'lg' : 'xl'}
               style={{
                 background: 'linear-gradient(135deg, rgba(212, 175, 55, 0.08) 0%, rgba(74, 55, 40, 0.03) 100%)',
                 backdropFilter: 'blur(20px)',
@@ -945,7 +1013,7 @@ export default function Dashboard() {
                 color: '#ffffff'
               }}
             >
-              <Group justify="space-between" mb="lg">
+              <Group justify="space-between" mb={isMobile ? 'md' : 'lg'}>
                 <div>
                   <Title order={3} style={{ color: '#d4af37', marginBottom: '4px' }}>
                     Payment Status Distribution
@@ -964,7 +1032,7 @@ export default function Dashboard() {
                 />
               </Group>
               
-              <SimpleGrid cols={2} spacing="lg" mb="xl">
+              <SimpleGrid cols={{ base: 1, xs: 2 }} spacing={{ base: 'sm', sm: 'lg' }} mb={{ base: 'md', lg: 'xl' }}>
                 {statusData.map((item, index) => (
                   <Card
                     key={index}
@@ -1039,7 +1107,7 @@ export default function Dashboard() {
                 ))}
               </SimpleGrid>
               
-              <ResponsiveContainer width="100%" height={200}>
+              <ResponsiveContainer width="100%" height={isMobile ? 150 : 200}>
                 <PieChart>
                   <Pie
                     data={statusData}
@@ -1076,7 +1144,7 @@ export default function Dashboard() {
           <Card
             shadow="xl"
             padding={0}
-            radius="xl"
+            radius={isMobile ? 'lg' : 'xl'}
             style={{
               background: 'linear-gradient(135deg, rgba(212, 175, 55, 0.08) 0%, rgba(74, 55, 40, 0.03) 100%)',
               backdropFilter: 'blur(20px)',
@@ -1084,22 +1152,25 @@ export default function Dashboard() {
               overflow: 'hidden'
             }}
           >
-            <Box p="xl" style={{ 
+            <Box p={isMobile ? 'md' : 'xl'} style={{ 
               background: 'linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(212, 175, 55, 0.05) 100%)',
               borderBottom: '1px solid rgba(212, 175, 55, 0.2)' 
             }}>
-              <Flex justify="space-between" align="center" wrap="wrap" gap="md">
+              <Flex justify="space-between" align="center" wrap="wrap" gap={isMobile ? 'xs' : 'md'}>
                 <div>
-                  <Title order={2} style={{ 
+                  <Title order={isMobile ? 3 : 2} style={{ 
                     color: '#d4af37', 
                     fontWeight: 700,
-                    marginBottom: '4px'
+                    marginBottom: '4px',
+                    fontSize: isMobile ? '1.1rem' : '1.3rem'
                   }}>
-                    Invoice Management
+                    {isMobile ? 'Invoices' : 'Invoice Management'}
                   </Title>
-                  <Text style={{ color: '#a1a1aa' }} size="sm">
-                    Comprehensive tracking with real-time updates
-                  </Text>
+                  {!isSmall && (
+                    <Text style={{ color: '#a1a1aa' }} size={isMobile ? 'xs' : 'sm'}>
+                      {isMobile ? 'Real-time tracking' : 'Comprehensive tracking with real-time updates'}
+                    </Text>
+                  )}
                 </div>
                 
                 <Group gap="md">

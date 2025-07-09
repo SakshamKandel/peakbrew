@@ -375,18 +375,18 @@ export default function CustomerManagement() {
     <div style={{ 
       minHeight: '100vh', 
       background: 'linear-gradient(135deg, #4a3728 0%, #2d1f1a 50%, #1a1310 100%)',
-      padding: '20px',
+      padding: window.innerWidth < 768 ? '10px' : '20px',
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
     }}>
       <LoadingOverlay visible={loading} />
       
       <Container size="xl" px={0}>
-        {/* Header */}
+        {/* Mobile-Optimized Header */}
         <Card
           shadow="xl"
-          padding="xl"
-          radius="xl"
-          mb="xl"
+          padding={window.innerWidth < 768 ? 'md' : 'xl'}
+          radius={window.innerWidth < 768 ? 'lg' : 'xl'}
+          mb={window.innerWidth < 768 ? 'md' : 'xl'}
           style={{
             background: 'linear-gradient(135deg, rgba(212, 175, 55, 0.1) 0%, rgba(74, 55, 40, 0.05) 100%)',
             backdropFilter: 'blur(20px)',
@@ -394,10 +394,10 @@ export default function CustomerManagement() {
             color: '#ffffff'
           }}
         >
-          <Flex justify="space-between" align="center" wrap="wrap" gap="md">
-            <Group gap="md">
+          <Flex justify="space-between" align="center" wrap="wrap" gap={window.innerWidth < 768 ? 'xs' : 'md'}>
+            <Group gap={window.innerWidth < 768 ? 'xs' : 'md'}>
               <ActionIcon
-                size="lg"
+                size={window.innerWidth < 768 ? 'md' : 'lg'}
                 variant="light"
                 onClick={() => navigate('/dashboard')}
                 style={{
@@ -407,49 +407,87 @@ export default function CustomerManagement() {
                 }}
                 title="Back to Dashboard"
               >
-                <IconArrowLeft size={20} />
+                <IconArrowLeft size={window.innerWidth < 768 ? 16 : 20} />
               </ActionIcon>
               <div>
-                <Title order={1} style={{ color: '#d4af37', marginBottom: '8px' }}>
-                  Customer Management
+                <Title order={window.innerWidth < 768 ? 2 : 1} style={{ color: '#d4af37', marginBottom: '8px', fontSize: window.innerWidth < 768 ? '1.2rem' : '1.5rem' }}>
+                  {window.innerWidth < 480 ? 'Customers' : 'Customer Management'}
                 </Title>
-                <Text size="lg" style={{ color: '#a1a1aa' }}>
-                  Manage your customers, track relationships, and analyze performance
-                </Text>
+                {window.innerWidth >= 480 && (
+                  <Text size={window.innerWidth < 768 ? 'sm' : 'lg'} style={{ color: '#a1a1aa' }}>
+                    {window.innerWidth < 768 ? 'Manage customers & relationships' : 'Manage your customers, track relationships, and analyze performance'}
+                  </Text>
+                )}
               </div>
             </Group>
             
-            <Group gap="md">
-              <Button
-                leftSection={<IconRefresh size={16} />}
-                onClick={handleRefresh}
-                loading={refreshing}
-                variant="light"
-                style={{
-                  backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                  color: '#10b981',
-                  border: '1px solid rgba(16, 185, 129, 0.2)'
-                }}
-              >
-                Refresh
-              </Button>
+            <Group gap={window.innerWidth < 768 ? 'xs' : 'md'}>
+              {window.innerWidth < 480 ? (
+                <ActionIcon
+                  size="md"
+                  onClick={handleRefresh}
+                  loading={refreshing}
+                  variant="light"
+                  style={{
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    color: '#10b981',
+                    border: '1px solid rgba(16, 185, 129, 0.2)'
+                  }}
+                  title="Refresh"
+                >
+                  <IconRefresh size={14} />
+                </ActionIcon>
+              ) : (
+                <Button
+                  leftSection={<IconRefresh size={window.innerWidth < 768 ? 14 : 16} />}
+                  onClick={handleRefresh}
+                  loading={refreshing}
+                  size={window.innerWidth < 768 ? 'xs' : 'sm'}
+                  variant="light"
+                  style={{
+                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    color: '#10b981',
+                    border: '1px solid rgba(16, 185, 129, 0.2)'
+                  }}
+                >
+                  Refresh
+                </Button>
+              )}
+              
+              {window.innerWidth < 480 ? (
+                <ActionIcon
+                  size="md"
+                  onClick={() => setShowAnalytics(true)}
+                  variant="light"
+                  style={{
+                    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                    color: '#6366f1',
+                    border: '1px solid rgba(99, 102, 241, 0.2)'
+                  }}
+                  title="Analytics"
+                >
+                  <IconChartBar size={14} />
+                </ActionIcon>
+              ) : (
+                <Button
+                  leftSection={<IconChartBar size={window.innerWidth < 768 ? 14 : 16} />}
+                  onClick={() => setShowAnalytics(true)}
+                  size={window.innerWidth < 768 ? 'xs' : 'sm'}
+                  variant="light"
+                  style={{
+                    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                    color: '#6366f1',
+                    border: '1px solid rgba(99, 102, 241, 0.2)'
+                  }}
+                >
+                  Analytics
+                </Button>
+              )}
               
               <Button
-                leftSection={<IconChartBar size={16} />}
-                onClick={() => setShowAnalytics(true)}
-                variant="light"
-                style={{
-                  backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                  color: '#6366f1',
-                  border: '1px solid rgba(99, 102, 241, 0.2)'
-                }}
-              >
-                Analytics
-              </Button>
-              
-              <Button
-                leftSection={<IconPlus size={16} />}
+                leftSection={<IconPlus size={window.innerWidth < 768 ? 14 : 16} />}
                 onClick={() => setShowForm(true)}
+                size={window.innerWidth < 768 ? 'xs' : 'sm'}
                 style={{
                   background: 'linear-gradient(135deg, #d4af37 0%, #f4d03f 100%)',
                   color: '#1a1a1a',
@@ -457,7 +495,7 @@ export default function CustomerManagement() {
                   border: 'none'
                 }}
               >
-                Add Customer
+                {window.innerWidth < 480 ? '+' : window.innerWidth < 768 ? 'Add' : 'Add Customer'}
               </Button>
             </Group>
           </Flex>
@@ -465,15 +503,15 @@ export default function CustomerManagement() {
 
         {/* Stats Cards */}
         {customerStats && (
-          <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="xl" mb="xl">
+          <SimpleGrid cols={{ base: 1, xs: 2, sm: 2, lg: 4 }} spacing={{ base: 'sm', sm: 'md', lg: 'xl' }} mb={{ base: 'md', sm: 'xl' }}>
             {statsCards.map((stat, index) => {
               const Icon = stat.icon;
               return (
                 <Card
                   key={index}
                   shadow="xl"
-                  padding="xl"
-                  radius="xl"
+                  padding={window.innerWidth < 768 ? 'md' : 'xl'}
+                  radius={window.innerWidth < 768 ? 'lg' : 'xl'}
                   style={{
                     background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%)',
                     backdropFilter: 'blur(20px)',
@@ -489,9 +527,9 @@ export default function CustomerManagement() {
                     e.currentTarget.style.transform = 'translateY(0)';
                   }}
                 >
-                  <Group justify="space-between" mb="md">
+                  <Group justify="space-between" mb={window.innerWidth < 768 ? 'xs' : 'md'}>
                     <ThemeIcon
-                      size={60}
+                      size={window.innerWidth < 768 ? 48 : 60}
                       radius="xl"
                       style={{
                         background: `${stat.color}20`,
@@ -499,7 +537,7 @@ export default function CustomerManagement() {
                         border: `1px solid ${stat.color}30`
                       }}
                     >
-                      <Icon size={28} />
+                      <Icon size={window.innerWidth < 768 ? 22 : 28} />
                     </ThemeIcon>
                     <div style={{ textAlign: 'right' }}>
                       <Text size="xs" style={{ color: '#a1a1aa', textTransform: 'uppercase' }}>
@@ -515,9 +553,9 @@ export default function CustomerManagement() {
                     {stat.title}
                   </Text>
                   
-                  <Text fw={900} size="2rem" style={{ color: '#ffffff', lineHeight: 1 }}>
-                    {typeof stat.value === 'string' && stat.value.length > 20 
-                      ? stat.value.substring(0, 20) + '...' 
+                  <Text fw={900} size={window.innerWidth < 768 ? '1.5rem' : '2rem'} style={{ color: '#ffffff', lineHeight: 1 }}>
+                    {typeof stat.value === 'string' && stat.value.length > (window.innerWidth < 768 ? 15 : 20)
+                      ? stat.value.substring(0, window.innerWidth < 768 ? 15 : 20) + '...' 
                       : stat.value}
                   </Text>
                 </Card>
@@ -526,12 +564,12 @@ export default function CustomerManagement() {
           </SimpleGrid>
         )}
 
-        {/* Search and Filters */}
+        {/* Mobile-Optimized Search and Filters */}
         <Card
           shadow="xl"
-          padding="xl"
-          radius="xl"
-          mb="xl"
+          padding={window.innerWidth < 768 ? 'md' : 'xl'}
+          radius={window.innerWidth < 768 ? 'lg' : 'xl'}
+          mb={window.innerWidth < 768 ? 'md' : 'xl'}
           style={{
             background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%)',
             backdropFilter: 'blur(20px)',
@@ -539,7 +577,7 @@ export default function CustomerManagement() {
             color: '#ffffff'
           }}
         >
-          <Flex justify="space-between" align="center" wrap="wrap" gap="md" mb="md">
+          <Flex justify="space-between" align="center" wrap="wrap" gap={window.innerWidth < 768 ? 'xs' : 'md'} mb={window.innerWidth < 768 ? 'xs' : 'md'}>
             <Text size="lg" fw={600} style={{ color: '#d4af37' }}>
               Search & Filter
             </Text>
@@ -727,11 +765,11 @@ export default function CustomerManagement() {
           </Stack>
         </Card>
 
-        {/* Customers Table */}
+        {/* Mobile-Optimized Customers Table */}
         <Card
           shadow="xl"
-          padding="xl"
-          radius="xl"
+          padding={window.innerWidth < 768 ? 'md' : 'xl'}
+          radius={window.innerWidth < 768 ? 'lg' : 'xl'}
           style={{
             background: 'linear-gradient(135deg, rgba(212, 175, 55, 0.08) 0%, rgba(74, 55, 40, 0.03) 100%)',
             backdropFilter: 'blur(20px)',
@@ -739,18 +777,20 @@ export default function CustomerManagement() {
             color: '#ffffff'
           }}
         >
-          <Group justify="space-between" mb="xl">
+          <Group justify="space-between" mb={window.innerWidth < 768 ? 'md' : 'xl'}>
             <div>
-              <Title order={3} style={{ color: '#d4af37', marginBottom: '4px' }}>
-                Customers ({filteredCustomers.length})
+              <Title order={window.innerWidth < 768 ? 4 : 3} style={{ color: '#d4af37', marginBottom: '4px', fontSize: window.innerWidth < 768 ? '1rem' : '1.2rem' }}>
+                {window.innerWidth < 480 ? `${filteredCustomers.length} Customers` : `Customers (${filteredCustomers.length})`}
               </Title>
-              <Text size="sm" style={{ color: '#a1a1aa' }}>
-                Manage customer relationships and track performance
-              </Text>
+              {window.innerWidth >= 480 && (
+                <Text size={window.innerWidth < 768 ? 'xs' : 'sm'} style={{ color: '#a1a1aa' }}>
+                  {window.innerWidth < 768 ? 'Manage relationships' : 'Manage customer relationships and track performance'}
+                </Text>
+              )}
             </div>
           </Group>
 
-          <ScrollArea style={{ height: 600 }}>
+          <ScrollArea style={{ height: window.innerWidth < 768 ? 400 : 600 }}>
             {paginatedCustomers.length === 0 ? (
               <Stack align="center" py={80}>
                 <ThemeIcon size={80} style={{ 
@@ -780,7 +820,142 @@ export default function CustomerManagement() {
                   Add Your First Customer
                 </Button>
               </Stack>
+            ) : window.innerWidth < 768 ? (
+              // Mobile Card Layout
+              <Stack gap="md">
+                {paginatedCustomers.map((customer) => (
+                  <Card
+                    key={customer.id}
+                    padding="md"
+                    radius="md"
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      border: '1px solid rgba(255, 255, 255, 0.1)',
+                      transition: 'all 0.2s ease'
+                    }}
+                    onClick={() => handleViewCustomer(customer)}
+                  >
+                    <Group justify="space-between" mb="xs">
+                      <Group gap="sm">
+                        <Avatar 
+                          size="sm" 
+                          radius="xl" 
+                          style={{ 
+                            background: 'linear-gradient(135deg, #d4af37 0%, #f4d03f 100%)',
+                            color: '#1a1a1a'
+                          }}
+                        >
+                          {getCustomerInitials(customer.name)}
+                        </Avatar>
+                        <div>
+                          <Text fw={600} size="sm" style={{ color: '#ffffff' }}>
+                            {customer.name}
+                          </Text>
+                          {customer.businessName && (
+                            <Text size="xs" style={{ color: '#d4af37' }}>
+                              {customer.businessName}
+                            </Text>
+                          )}
+                        </div>
+                      </Group>
+                      <Badge
+                        color={getStatusColor(customer.status)}
+                        variant="light"
+                        radius="md"
+                        size="sm"
+                      >
+                        {customer.status || 'active'}
+                      </Badge>
+                    </Group>
+                    
+                    <SimpleGrid cols={2} spacing="xs" mb="xs">
+                      <div>
+                        <Text size="xs" style={{ color: '#a1a1aa' }}>Revenue</Text>
+                        <Text fw={600} size="sm" style={{ color: '#10b981' }}>
+                          {formatCurrency(customer.totalRevenue)}
+                        </Text>
+                      </div>
+                      <div>
+                        <Text size="xs" style={{ color: '#a1a1aa' }}>Pending</Text>
+                        <Text fw={600} size="sm" style={{ color: '#f59e0b' }}>
+                          {formatCurrency(customer.pendingAmount || 0)}
+                        </Text>
+                      </div>
+                      <div>
+                        <Text size="xs" style={{ color: '#a1a1aa' }}>Invoices</Text>
+                        <Text size="sm" style={{ color: '#6366f1' }}>
+                          {customer.totalInvoices || 0}
+                        </Text>
+                      </div>
+                      <div>
+                        <Text size="xs" style={{ color: '#a1a1aa' }}>Last Invoice</Text>
+                        <Text size="sm" style={{ color: '#d1d5db' }}>
+                          {formatDate(customer.lastInvoiceDate)}
+                        </Text>
+                      </div>
+                    </SimpleGrid>
+                    
+                    <Group justify="space-between" align="center">
+                      <div>
+                        <Text size="xs" style={{ color: '#d1d5db' }}>
+                          {customer.email}
+                        </Text>
+                        {customer.phone && (
+                          <Text size="xs" style={{ color: '#a1a1aa' }}>
+                            {customer.phone}
+                          </Text>
+                        )}
+                      </div>
+                      <Group gap="xs">
+                        <ActionIcon
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleViewCustomer(customer);
+                          }}
+                          style={{
+                            backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                            color: '#6366f1',
+                            border: '1px solid rgba(99, 102, 241, 0.2)'
+                          }}
+                        >
+                          <IconEye size={12} />
+                        </ActionIcon>
+                        <ActionIcon
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleEditCustomer(customer);
+                          }}
+                          style={{
+                            backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                            color: '#f59e0b',
+                            border: '1px solid rgba(245, 158, 11, 0.2)'
+                          }}
+                        >
+                          <IconEdit size={12} />
+                        </ActionIcon>
+                        <ActionIcon
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteCustomer(customer.id);
+                          }}
+                          style={{
+                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                            color: '#ef4444',
+                            border: '1px solid rgba(239, 68, 68, 0.2)'
+                          }}
+                        >
+                          <IconTrash size={12} />
+                        </ActionIcon>
+                      </Group>
+                    </Group>
+                  </Card>
+                ))}
+              </Stack>
             ) : (
+              // Desktop Table Layout
               <Table verticalSpacing="md" style={{ '--table-border-color': 'rgba(255, 255, 255, 0.1)' }}>
                 <Table.Thead style={{ 
                   backgroundColor: 'rgba(255, 255, 255, 0.02)',
