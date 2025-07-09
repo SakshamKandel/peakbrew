@@ -387,9 +387,31 @@ export default function Dashboard() {
     const startDate = startOfMonth(month);
     const endDate = endOfMonth(month);
     const monthInvoices = invoices.filter(inv => {
-      const invoiceDate = new Date(inv.date);
-      return isAfter(invoiceDate, startDate) && isBefore(invoiceDate, endDate);
+      if (!inv.date) return false;
+      
+      let invoiceDate;
+      // Handle different date formats
+      if (inv.date.toDate && typeof inv.date.toDate === 'function') {
+        invoiceDate = inv.date.toDate();
+      } else if (inv.date.seconds) {
+        invoiceDate = new Date(inv.date.seconds * 1000);
+      } else if (typeof inv.date === 'string') {
+        invoiceDate = new Date(inv.date);
+      } else if (inv.date instanceof Date) {
+        invoiceDate = inv.date;
+      } else {
+        return false;
+      }
+      
+      // Check if date is valid
+      if (isNaN(invoiceDate.getTime())) return false;
+      
+      // Include invoices from the entire month (inclusive of start and end dates)
+      return invoiceDate >= startDate && invoiceDate <= endDate;
     });
+    
+    console.log(`Monthly data for ${format(month, 'MMM yyyy')}: ${monthInvoices.length} invoices, $${monthInvoices.reduce((sum, inv) => sum + (inv.total || 0), 0)} revenue`);
+    
     return {
       month: format(month, 'MMM'),
       revenue: monthInvoices.reduce((sum, inv) => sum + (inv.total || 0), 0),
@@ -405,6 +427,13 @@ export default function Dashboard() {
     getMonthlyData(currentMonth),
   ];
 
+  console.log('Total invoices for analytics:', invoices.length);
+  console.log('Monthly data:', monthlyData);
+  
+  // Validate monthly data for chart
+  const validMonthlyData = monthlyData.filter(data => data && data.month && typeof data.revenue === 'number');
+  console.log('Valid monthly data for chart:', validMonthlyData);
+
   // Calculate real percentages
   const paidPercentage = totalInvoices > 0 ? ((paidInvoices / totalInvoices) * 100).toFixed(1) : 0;
   const pendingPercentage = totalInvoices > 0 ? ((pendingInvoices / totalInvoices) * 100).toFixed(1) : 0;
@@ -415,6 +444,11 @@ export default function Dashboard() {
   const lastMonthRevenue = monthlyData[2]?.revenue || 0;
   const revenueGrowth = lastMonthRevenue > 0 ? 
     (((currentMonthRevenue - lastMonthRevenue) / lastMonthRevenue) * 100).toFixed(1) : 0;
+  
+  console.log('Revenue growth calculation:');
+  console.log('Current month revenue:', currentMonthRevenue);
+  console.log('Last month revenue:', lastMonthRevenue);
+  console.log('Revenue growth:', revenueGrowth + '%');
 
   const statusData = [
     { name: 'Paid', value: paidInvoices, color: '#10b981', percentage: paidPercentage },
@@ -736,35 +770,52 @@ export default function Dashboard() {
                 </ThemeIcon>
               </Group>
               
-              <ResponsiveContainer width="100%" height={300}>
-                <AreaChart data={monthlyData}>
-                  <defs>
-                    <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#d4af37" stopOpacity={0.3}/>
-                      <stop offset="95%" stopColor="#d4af37" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
-                  <XAxis dataKey="month" stroke="#a1a1aa" />
-                  <YAxis stroke="#a1a1aa" />
-                  <RechartsTooltip 
-                    contentStyle={{
-                      backgroundColor: 'rgba(74, 55, 40, 0.95)',
-                      border: '1px solid rgba(212, 175, 55, 0.2)',
-                      borderRadius: '8px',
-                      color: '#ffffff'
-                    }}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="revenue"
-                    stroke="#d4af37"
-                    strokeWidth={2}
-                    fillOpacity={1}
-                    fill="url(#colorRevenue)"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
+              {validMonthlyData.length > 0 ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <AreaChart data={validMonthlyData}>
+                    <defs>
+                      <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#d4af37" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#d4af37" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                    <XAxis dataKey="month" stroke="#a1a1aa" />
+                    <YAxis 
+                      stroke="#a1a1aa" 
+                      tickFormatter={(value) => `$${value.toLocaleString()}`}
+                    />
+                    <RechartsTooltip 
+                      contentStyle={{
+                        backgroundColor: 'rgba(74, 55, 40, 0.95)',
+                        border: '1px solid rgba(212, 175, 55, 0.2)',
+                        borderRadius: '8px',
+                        color: '#ffffff'
+                      }}
+                      formatter={(value, name) => [`$${value.toLocaleString()}`, 'Revenue']}
+                      labelStyle={{ color: '#ffffff' }}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="revenue"
+                      stroke="#d4af37"
+                      strokeWidth={2}
+                      fillOpacity={1}
+                      fill="url(#colorRevenue)"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              ) : (
+                <div style={{ 
+                  display: 'flex', 
+                  justifyContent: 'center', 
+                  alignItems: 'center', 
+                  height: 300, 
+                  color: '#a1a1aa' 
+                }}>
+                  <Text>No revenue data available for the selected period</Text>
+                </div>
+              )}
             </Card>
 
             {/* Status Distribution */}
