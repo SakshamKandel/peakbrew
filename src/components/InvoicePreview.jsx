@@ -65,6 +65,28 @@ export default function InvoicePreview({ invoice, onClose, onEdit }) {
     return format(date, formatString);
   };
 
+  // Check if invoice was recently updated (within last 5 minutes)
+  const isRecentlyUpdated = () => {
+    if (!invoice.updatedAt) return false;
+    
+    let updatedDate;
+    if (invoice.updatedAt.toDate && typeof invoice.updatedAt.toDate === 'function') {
+      updatedDate = invoice.updatedAt.toDate();
+    } else if (invoice.updatedAt.seconds) {
+      updatedDate = new Date(invoice.updatedAt.seconds * 1000);
+    } else if (invoice.updatedAt instanceof Date) {
+      updatedDate = invoice.updatedAt;
+    } else {
+      updatedDate = new Date(invoice.updatedAt);
+    }
+    
+    const now = new Date();
+    const timeDiff = now - updatedDate;
+    const fiveMinutes = 5 * 60 * 1000; // 5 minutes in milliseconds
+    
+    return timeDiff < fiveMinutes;
+  };
+
   const generateAndUploadPDF = async (forceRegenerate = false) => {
     if (!invoice || !invoice.id) {
       return;
@@ -880,7 +902,7 @@ export default function InvoicePreview({ invoice, onClose, onEdit }) {
                 Edit Invoice
               </Button>
               
-              {invoice.pdfURL ? (
+              {invoice.pdfURL && !isRecentlyUpdated() ? (
                 <Button
                   leftSection={<IconDownload size={16} />}
                   onClick={downloadExistingPDF}

@@ -265,12 +265,28 @@ export default function Dashboard() {
         color: 'red',
       });
     }
+    
+    if (!editingInvoice || !editingInvoice.id) {
+      return notifications.show({
+        title: 'Error',
+        message: 'No invoice selected for editing.',
+        color: 'red',
+      });
+    }
+    
     try {
+      console.log('Updating invoice with ID:', editingInvoice.id);
+      console.log('Invoice data to update:', invoiceData);
+      
       const invoiceRef = doc(db, 'invoices', editingInvoice.id);
       await updateDoc(invoiceRef, {
         ...invoiceData,
-        updatedAt: new Date()
+        userId: currentUser.uid, // Ensure user ID is maintained
+        updatedAt: new Date(),
+        pdfURL: null // Clear PDF URL to force regeneration
       });
+      
+      console.log('Invoice updated successfully in database');
       
       await fetchInvoices();
       setShowForm(false);
@@ -284,7 +300,7 @@ export default function Dashboard() {
       console.error('Error updating invoice:', error);
       notifications.show({
         title: 'Error',
-        message: 'Failed to update invoice.',
+        message: 'Failed to update invoice. Please try again.',
         color: 'red',
       });
     }
@@ -326,6 +342,7 @@ export default function Dashboard() {
   };
 
   const handleEditInvoice = (invoice) => {
+    console.log('Edit invoice clicked for:', invoice);
     setEditingInvoice(invoice);
     setShowForm(true);
   };

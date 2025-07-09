@@ -182,12 +182,16 @@ const InvoiceForm = ({ onSave, onCancel, invoice = null }) => {
     // }
     
     if (invoice) {
-      setFormData({
+      console.log('Loading invoice for editing:', invoice);
+      const formDataToLoad = {
         ...invoice,
         date: parseDate(invoice.date)
-      });
+      };
+      console.log('Form data set to:', formDataToLoad);
+      setFormData(formDataToLoad);
       // setCustomerSearchValue(invoice.customerName || '');
     } else {
+      console.log('Creating new invoice');
       const invoiceNum = `INV-${Date.now()}`;
       setFormData(prev => ({ ...prev, invoiceNumber: invoiceNum }));
     }
@@ -266,12 +270,16 @@ const InvoiceForm = ({ onSave, onCancel, invoice = null }) => {
     // Ensure we have a valid date
     const validDate = parseDate(formData.date);
 
-    onSave({
+    const invoiceDataToSave = {
       ...formData,
       date: validDate,
       subtotal,
       total
-    });
+    };
+
+    console.log('Submitting invoice data:', invoiceDataToSave);
+    
+    onSave(invoiceDataToSave);
   };
 
   const subtotal = formData.items.reduce((sum, item) => sum + item.total, 0);
