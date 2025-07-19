@@ -29,6 +29,7 @@ export class CustomerService {
         updatedAt: new Date(),
         totalInvoices: 0,
         totalRevenue: 0,
+        paidAmount: 0,
         pendingAmount: 0,
         lastInvoiceDate: null,
         paymentHistory: [],
@@ -175,10 +176,14 @@ export class CustomerService {
         totalRevenue: invoiceData.status === 'paid' ? 
           customer.totalRevenue + (multiplier * (invoiceData.total || 0)) : 
           customer.totalRevenue,
-        // Track pending amount
+        // Track pending amount separately
         pendingAmount: invoiceData.status === 'pending' ? 
           (customer.pendingAmount || 0) + (multiplier * (invoiceData.total || 0)) : 
           (customer.pendingAmount || 0),
+        // Track paid amount separately
+        paidAmount: invoiceData.status === 'paid' ? 
+          (customer.paidAmount || 0) + (multiplier * (invoiceData.total || 0)) : 
+          (customer.paidAmount || 0),
         lastInvoiceDate: operation === 'add' ? new Date() : customer.lastInvoiceDate,
         updatedAt: new Date()
       };
@@ -205,78 +210,6 @@ export class CustomerService {
     }
   }
 
-  // Get customer analytics
-  async getCustomerAnalytics(userId) {
-    try {
-      const { customers } = await this.getCustomers(userId);
-      
-      const analytics = {
-        totalCustomers: customers.length,
-        activeCustomers: customers.filter(c => c.status === 'active').length,
-        inactiveCustomers: customers.filter(c => c.status === 'inactive').length,
-        topCustomers: customers
-          .sort((a, b) => (b.totalRevenue || 0) - (a.totalRevenue || 0))
-          .slice(0, 10),
-        recentCustomers: customers
-          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-          .slice(0, 5),
-        averageRevenuePerCustomer: customers.length > 0 
-          ? customers.reduce((sum, c) => sum + (c.totalRevenue || 0), 0) / customers.length 
-          : 0,
-        totalPendingAmount: customers.reduce((sum, c) => sum + (c.pendingAmount || 0), 0),
-        customerGrowth: this.calculateCustomerGrowth(customers)
-      };
-
-      return analytics;
-    } catch (error) {
-      console.error('Error getting customer analytics:', error);
-      throw error;
-    }
-  }
-
-  // Calculate customer growth over time
-  calculateCustomerGrowth(customers) {
-    const now = new Date();
-    const currentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    const twoMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 2, 1);
-    const threeMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 3, 1);
-
-    const getCustomersInMonth = (month) => {
-      const nextMonth = new Date(month.getFullYear(), month.getMonth() + 1, 1);
-      return customers.filter(customer => {
-        const createdAt = customer.createdAt.toDate ? customer.createdAt.toDate() : new Date(customer.createdAt);
-        return createdAt >= month && createdAt < nextMonth;
-      });
-    };
-
-    return [
-      {
-        month: this.formatMonth(threeMonthsAgo),
-        count: getCustomersInMonth(threeMonthsAgo).length,
-        revenue: getCustomersInMonth(threeMonthsAgo).reduce((sum, c) => sum + (c.totalRevenue || 0), 0)
-      },
-      {
-        month: this.formatMonth(twoMonthsAgo),
-        count: getCustomersInMonth(twoMonthsAgo).length,
-        revenue: getCustomersInMonth(twoMonthsAgo).reduce((sum, c) => sum + (c.totalRevenue || 0), 0)
-      },
-      {
-        month: this.formatMonth(lastMonth),
-        count: getCustomersInMonth(lastMonth).length,
-        revenue: getCustomersInMonth(lastMonth).reduce((sum, c) => sum + (c.totalRevenue || 0), 0)
-      },
-      {
-        month: this.formatMonth(currentMonth),
-        count: getCustomersInMonth(currentMonth).length,
-        revenue: getCustomersInMonth(currentMonth).reduce((sum, c) => sum + (c.totalRevenue || 0), 0)
-      }
-    ];
-  }
-
-  formatMonth(date) {
-    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
-  }
 
 
   // Search customers with advanced filters

@@ -5,12 +5,4 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   assetsInclude: ['**/*.svg'],
-  optimizeDeps: {
-    include: ['@tabler/icons-react']
-  },
-  server: {
-    fs: {
-      strict: false
-    }
-  }
 })

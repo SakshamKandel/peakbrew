@@ -76,6 +76,14 @@ import { useAuth } from '../contexts/AuthContext';
 import { notifications } from '@mantine/notifications';
 import Logo from './Logo';
 import { COMPANY_INFO } from '../constants/companyInfo';
+import { 
+  collection, 
+  getDocs, 
+  query, 
+  where, 
+  orderBy 
+} from 'firebase/firestore';
+import { db } from '../firebase';
 
 const CustomerDetails = ({ customer, onClose, onEdit }) => {
   const [loading, setLoading] = useState(false);
@@ -88,41 +96,67 @@ const CustomerDetails = ({ customer, onClose, onEdit }) => {
   useEffect(() => {
     if (customer && currentUser) {
       fetchCustomerInvoices();
-      calculateCustomerStats();
     }
   }, [customer, currentUser]);
 
+  useEffect(() => {
+    if (customerInvoices.length >= 0) {
+      calculateCustomerStats();
+    }
+  }, [customerInvoices]);
+
   const fetchCustomerInvoices = async () => {
-    // This would fetch invoices for this specific customer
-    // For now, we'll use mock data
-    const mockInvoices = [
-      {
-        id: '1',
-        invoiceNumber: 'INV-001',
-        date: new Date('2024-01-15'),
-        total: 1500,
-        status: 'paid',
-        dueDate: new Date('2024-02-15')
-      },
-      {
-        id: '2',
-        invoiceNumber: 'INV-002',
-        date: new Date('2024-02-10'),
-        total: 2200,
-        status: 'pending',
-        dueDate: new Date('2024-03-10')
-      }
-    ];
-    setCustomerInvoices(mockInvoices);
+    if (!currentUser || !customer) return;
+    
+    setLoading(true);
+    try {
+      const q = query(
+        collection(db, 'invoices'),
+        where('userId', '==', currentUser.uid),
+        where('customerName', '==', customer.name),
+        orderBy('createdAt', 'desc')
+      );
+      
+      const querySnapshot = await getDocs(q);
+      const invoices = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      
+      setCustomerInvoices(invoices);
+    } catch (error) {
+      console.error('Error fetching customer invoices:', error);
+      notifications.show({
+        title: 'Error',
+        message: 'Failed to fetch customer invoices',
+        color: 'red'
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const calculateCustomerStats = () => {
-    const totalRevenue = customer.totalRevenue || 0;
-    const totalInvoices = customer.totalInvoices || 0;
-    const avgInvoiceValue = totalInvoices > 0 ? totalRevenue / totalInvoices : 0;
+    // Calculate stats from real invoice data
+    const totalInvoices = customerInvoices.length;
+    const paidInvoices = customerInvoices.filter(inv => inv.status === 'paid');
+    const pendingInvoices = customerInvoices.filter(inv => inv.status === 'pending');
     
-    // Mock payment history for demonstration
-    const paymentHistory = customer.paymentHistory || [];
+    // Calculate paid amount (only from paid invoices)
+    const paidAmount = paidInvoices.reduce((sum, inv) => sum + (inv.total || 0), 0);
+    // Calculate pending amount (only from pending invoices)
+    const pendingAmount = pendingInvoices.reduce((sum, inv) => sum + (inv.total || 0), 0);
+    // Total revenue should be paid amount only
+    const totalRevenue = paidAmount;
+    
+    const avgInvoiceValue = totalInvoices > 0 ? (paidAmount + pendingAmount) / totalInvoices : 0;
+    
+    const paymentHistory = customerInvoices.map(inv => ({
+      invoiceId: inv.id,
+      amount: inv.total || 0,
+      date: inv.createdAt?.toDate ? inv.createdAt.toDate() : new Date(inv.createdAt || Date.now()),
+      status: inv.status || 'pending'
+    }));
     const onTimePayments = paymentHistory.filter(p => p.status === 'paid').length;
     const paymentScore = paymentHistory.length > 0 ? (onTimePayments / paymentHistory.length) * 100 : 100;
 
@@ -131,6 +165,10 @@ const CustomerDetails = ({ customer, onClose, onEdit }) => {
       totalInvoices,
       avgInvoiceValue,
       paymentScore,
+      pendingAmount,
+      paidAmount,
+      paidInvoices: paidInvoices.length,
+      pendingInvoices: pendingInvoices.length,
       lastPaymentDate: customer.lastInvoiceDate,
       customerSince: customer.createdAt
     });

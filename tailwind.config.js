@@ -1,4 +1,6 @@
 /** @type {import('tailwindcss').Config} */
+const colors = require('tailwindcss/colors');
+
 export default {
   content: [
     "./index.html",
@@ -7,35 +9,68 @@ export default {
   theme: {
     extend: {
       colors: {
-        peak: {
-          gold: '#e8c848',
-          'gold-dark': '#d4af37',
-          dark: '#1a1a1a',
-          'dark-light': '#2d2d2d',
-          accent: '#8b4513',
-          'accent-light': '#a0522d',
+        slate: colors.slate,
+        teal: colors.teal,
+        rose: colors.rose,
+        brown: {
+          50: '#fdf8f6',
+          100: '#f2e8e5',
+          200: '#eaddd7',
+          300: '#e0cec7',
+          400: '#d2bab0',
+          500: '#bfa094',
+          600: '#a18072',
+          700: '#977669',
+          800: '#7c5f5a',
+          900: '#5c4742',
+          950: '#362826',
+        },
+        beer: {
+          50: '#fefce8',
+          100: '#fef9c3',
+          200: '#fef08a',
+          300: '#fde047',
+          400: '#facc15',
+          500: '#f59e0b',
+          600: '#d97706',
+          700: '#b45309',
+          800: '#92400e',
+          900: '#78350f',
+          950: '#451a03',
         },
       },
       fontFamily: {
-        'inter': ['Inter', 'sans-serif'],
+        'sans': ['Inter', 'sans-serif'],
+        'beer': ['Fredoka One', 'cursive'],
       },
       animation: {
-        'fadeIn': 'fadeIn 0.5s ease-in-out',
-        'slideUp': 'slideUp 0.4s ease-out',
-        'scaleIn': 'scaleIn 0.3s ease-out',
+        'bubble': 'bubble 4s linear infinite',
+        'foam': 'foam 3s ease-in-out infinite',
+        'float': 'float 3s ease-in-out infinite',
+        'aurora': 'aurora 60s linear infinite',
       },
       keyframes: {
-        fadeIn: {
-          '0%': { opacity: '0' },
-          '100%': { opacity: '1' },
+        aurora: {
+          from: {
+            backgroundPosition: '50% 50%, 50% 50%',
+          },
+          to: {
+            backgroundPosition: '350% 50%, 350% 50%',
+          },
         },
-        slideUp: {
-          '0%': { transform: 'translateY(20px)', opacity: '0' },
-          '100%': { transform: 'translateY(0)', opacity: '1' },
+        bubble: {
+          '0%': { transform: 'translateY(100vh) scale(0)', opacity: '0' },
+          '10%': { opacity: '1' },
+          '90%': { opacity: '1' },
+          '100%': { transform: 'translateY(-100vh) scale(1)', opacity: '0' },
         },
-        scaleIn: {
-          '0%': { transform: 'scale(0.95)', opacity: '0' },
-          '100%': { transform: 'scale(1)', opacity: '1' },
+        foam: {
+          '0%, 100%': { transform: 'translateX(-100%)' },
+          '50%': { transform: 'translateX(100%)' },
+        },
+        float: {
+          '0%, 100%': { transform: 'translateY(0px)' },
+          '50%': { transform: 'translateY(-20px)' },
         },
       },
     },

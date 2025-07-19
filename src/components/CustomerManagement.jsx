@@ -44,9 +44,6 @@ import {
   IconMapPin,
   IconBuilding,
   IconUsers,
-  IconTrendingUp,
-  IconCurrencyDollar,
-  IconCalendar,
   IconSearch,
   IconFilter,
   IconDownload,
@@ -59,15 +56,6 @@ import {
   IconCheck,
   IconAlertCircle,
   IconRefresh,
-  IconArrowUpRight,
-  IconArrowDownRight,
-  IconUserPlus,
-  IconUserCheck,
-  IconUserX,
-  IconChartBar,
-  IconTarget,
-  IconClock,
-  IconHistory,
   IconArrowLeft
 } from '@tabler/icons-react';
 import { useAuth } from '../contexts/AuthContext';
@@ -76,10 +64,18 @@ import { useSpring, animated } from 'react-spring';
 import customerService from '../services/customerService';
 import CustomerForm from './CustomerForm';
 import CustomerDetails from './CustomerDetails';
-import CustomerAnalytics from './CustomerAnalytics';
+import { 
+  collection, 
+  getDocs, 
+  query, 
+  where, 
+  orderBy 
+} from 'firebase/firestore';
+import { db } from '../firebase';
 
 export default function CustomerManagement() {
   const [customers, setCustomers] = useState([]);
+  const [customersWithRealStats, setCustomersWithRealStats] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('name');
@@ -90,9 +86,7 @@ export default function CustomerManagement() {
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
-  const [showAnalytics, setShowAnalytics] = useState(false);
   const [editingCustomer, setEditingCustomer] = useState(null);
-  const [customerStats, setCustomerStats] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState('customers');
   const [advancedFilters, setAdvancedFilters] = useState({
@@ -110,9 +104,14 @@ export default function CustomerManagement() {
   useEffect(() => {
     if (currentUser) {
       fetchCustomers();
-      fetchCustomerStats();
     }
   }, [currentUser, sortBy, sortOrder, statusFilter]);
+
+  useEffect(() => {
+    if (customers.length > 0) {
+      calculateRealCustomerStats();
+    }
+  }, [customers]);
 
   // Refresh customer data when forms are closed
   useEffect(() => {
@@ -146,16 +145,6 @@ export default function CustomerManagement() {
     }
   };
 
-  const fetchCustomerStats = async () => {
-    if (!currentUser) return;
-
-    try {
-      const stats = await customerService.getCustomerAnalytics(currentUser.uid);
-      setCustomerStats(stats);
-    } catch (error) {
-      console.error('Error fetching customer stats:', error);
-    }
-  };
 
   const handleCreateCustomer = async (customerData) => {
     try {
@@ -164,7 +153,6 @@ export default function CustomerManagement() {
       // Force refresh customer data
       setLoading(true);
       await fetchCustomers();
-      await fetchCustomerStats();
       
       setShowForm(false);
       
@@ -182,7 +170,6 @@ export default function CustomerManagement() {
       // Force refresh customer data
       setLoading(true);
       await fetchCustomers();
-      await fetchCustomerStats();
       
       setShowForm(false);
       setEditingCustomer(null);
@@ -199,7 +186,6 @@ export default function CustomerManagement() {
       try {
         await customerService.deleteCustomer(customerId);
         await fetchCustomers();
-        await fetchCustomerStats();
         
         console.log('Customer deleted successfully!');
       } catch (error) {
@@ -246,11 +232,71 @@ export default function CustomerManagement() {
 
   const handleRefresh = () => {
     fetchCustomers(true);
-    fetchCustomerStats();
   };
 
-  // Filter and paginate customers
-  const filteredCustomers = customers.filter(customer => {
+  // Calculate real customer stats from actual invoice data
+  const calculateRealCustomerStats = async () => {
+    if (!currentUser || customers.length === 0) return;
+    
+    try {
+      // Fetch all invoices for this user
+      const q = query(
+        collection(db, 'invoices'),
+        where('userId', '==', currentUser.uid),
+        orderBy('createdAt', 'desc')
+      );
+      
+      const querySnapshot = await getDocs(q);
+      const invoices = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      
+      // Calculate stats for each customer based on real invoice data
+      const updatedCustomers = customers.map(customer => {
+        const customerInvoices = invoices.filter(inv => 
+          inv.customerName === customer.name || 
+          inv.customerEmail === customer.email
+        );
+        
+        const totalInvoices = customerInvoices.length;
+        const paidInvoices = customerInvoices.filter(inv => inv.status === 'paid');
+        const pendingInvoices = customerInvoices.filter(inv => inv.status === 'pending');
+        
+        // Calculate paid amount (only from paid invoices)
+        const paidAmount = paidInvoices.reduce((sum, inv) => sum + (inv.total || 0), 0);
+        // Calculate pending amount (only from pending invoices)
+        const pendingAmount = pendingInvoices.reduce((sum, inv) => sum + (inv.total || 0), 0);
+        // Total revenue should be paid amount only
+        const totalRevenue = paidAmount;
+        
+        const lastInvoiceDate = customerInvoices.length > 0 
+          ? customerInvoices[0].createdAt // Already sorted by createdAt desc
+          : null;
+        
+        return {
+          ...customer,
+          totalInvoices,
+          totalRevenue,
+          paidAmount,
+          pendingAmount,
+          lastInvoiceDate,
+          paidInvoices: paidInvoices.length,
+          pendingInvoices: pendingInvoices.length
+        };
+      });
+      
+      setCustomersWithRealStats(updatedCustomers);
+    } catch (error) {
+      console.error('Error calculating real customer stats:', error);
+      // Fallback to original customer data if calculation fails
+      setCustomersWithRealStats(customers);
+    }
+  };
+
+  // Filter and paginate customers using real stats
+  const dataSource = customersWithRealStats.length > 0 ? customersWithRealStats : customers;
+  const filteredCustomers = dataSource.filter(customer => {
     const matchesSearch = !searchTerm || 
       customer.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       customer.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -298,40 +344,6 @@ export default function CustomerManagement() {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
-  const statsCards = customerStats ? [
-    {
-      title: 'Total Customers',
-      value: customerStats.totalCustomers,
-      icon: IconUsers,
-      color: '#3b82f6',
-      trend: `+${customerStats.customerGrowth?.[3]?.count || 0}`,
-      subtitle: 'this month'
-    },
-    {
-      title: 'Active Customers',
-      value: customerStats.activeCustomers,
-      icon: IconUserCheck,
-      color: '#10b981',
-      trend: `${Math.round((customerStats.activeCustomers / customerStats.totalCustomers) * 100)}%`,
-      subtitle: 'active rate'
-    },
-    {
-      title: 'Avg Revenue/Customer',
-      value: formatCurrency(customerStats.averageRevenuePerCustomer),
-      icon: IconCurrencyDollar,
-      color: '#f59e0b',
-      trend: formatCurrency(customerStats.averageRevenuePerCustomer),
-      subtitle: 'per customer'
-    },
-    {
-      title: 'Pending Amount',
-      value: formatCurrency(customerStats.totalPendingAmount || 0),
-      icon: IconClock,
-      color: '#f59e0b',
-      trend: 'Awaiting Payment',
-      subtitle: 'pending invoices'
-    },
-  ] : [];
 
   if (showForm) {
     return (
@@ -362,14 +374,6 @@ export default function CustomerManagement() {
     );
   }
 
-  if (showAnalytics) {
-    return (
-      <CustomerAnalytics
-        onClose={() => setShowAnalytics(false)}
-        customerStats={customerStats}
-      />
-    );
-  }
 
   return (
     <div style={{ 
@@ -454,35 +458,6 @@ export default function CustomerManagement() {
                 </Button>
               )}
               
-              {window.innerWidth < 480 ? (
-                <ActionIcon
-                  size="md"
-                  onClick={() => setShowAnalytics(true)}
-                  variant="light"
-                  style={{
-                    backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                    color: '#6366f1',
-                    border: '1px solid rgba(99, 102, 241, 0.2)'
-                  }}
-                  title="Analytics"
-                >
-                  <IconChartBar size={14} />
-                </ActionIcon>
-              ) : (
-                <Button
-                  leftSection={<IconChartBar size={window.innerWidth < 768 ? 14 : 16} />}
-                  onClick={() => setShowAnalytics(true)}
-                  size={window.innerWidth < 768 ? 'xs' : 'sm'}
-                  variant="light"
-                  style={{
-                    backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                    color: '#6366f1',
-                    border: '1px solid rgba(99, 102, 241, 0.2)'
-                  }}
-                >
-                  Analytics
-                </Button>
-              )}
               
               <Button
                 leftSection={<IconPlus size={window.innerWidth < 768 ? 14 : 16} />}
@@ -501,68 +476,6 @@ export default function CustomerManagement() {
           </Flex>
         </Card>
 
-        {/* Stats Cards */}
-        {customerStats && (
-          <SimpleGrid cols={{ base: 1, xs: 2, sm: 2, lg: 4 }} spacing={{ base: 'sm', sm: 'md', lg: 'xl' }} mb={{ base: 'md', sm: 'xl' }}>
-            {statsCards.map((stat, index) => {
-              const Icon = stat.icon;
-              return (
-                <Card
-                  key={index}
-                  shadow="xl"
-                  padding={window.innerWidth < 768 ? 'md' : 'xl'}
-                  radius={window.innerWidth < 768 ? 'lg' : 'xl'}
-                  style={{
-                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%)',
-                    backdropFilter: 'blur(20px)',
-                    border: '1px solid rgba(255, 255, 255, 0.1)',
-                    color: '#ffffff',
-                    transition: 'transform 0.2s ease',
-                    cursor: 'pointer'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-4px)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0)';
-                  }}
-                >
-                  <Group justify="space-between" mb={window.innerWidth < 768 ? 'xs' : 'md'}>
-                    <ThemeIcon
-                      size={window.innerWidth < 768 ? 48 : 60}
-                      radius="xl"
-                      style={{
-                        background: `${stat.color}20`,
-                        color: stat.color,
-                        border: `1px solid ${stat.color}30`
-                      }}
-                    >
-                      <Icon size={window.innerWidth < 768 ? 22 : 28} />
-                    </ThemeIcon>
-                    <div style={{ textAlign: 'right' }}>
-                      <Text size="xs" style={{ color: '#a1a1aa', textTransform: 'uppercase' }}>
-                        {stat.subtitle}
-                      </Text>
-                      <Text size="sm" fw={600} style={{ color: stat.color }}>
-                        {stat.trend}
-                      </Text>
-                    </div>
-                  </Group>
-                  
-                  <Text size="sm" fw={500} style={{ color: '#d1d5db', marginBottom: '8px' }}>
-                    {stat.title}
-                  </Text>
-                  
-                  <Text fw={900} size={window.innerWidth < 768 ? '1.5rem' : '2rem'} style={{ color: '#ffffff', lineHeight: 1 }}>
-                    {typeof stat.value === 'string' && stat.value.length > (window.innerWidth < 768 ? 15 : 20)
-                      ? stat.value.substring(0, window.innerWidth < 768 ? 15 : 20) + '...' 
-                      : stat.value}
-                  </Text>
-                </Card>
-              );
-            })}
-          </SimpleGrid>
-        )}
 
         {/* Mobile-Optimized Search and Filters */}
         <Card
